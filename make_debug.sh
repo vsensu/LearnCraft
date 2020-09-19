@@ -1,1 +1,1 @@
-cd build_debug && cmake .. -G "Visual Studio 16"
+cd build_debug && cmake -A x86 ..

@@ -1,1 +1,1 @@
-cd build_release && cmake .. -G "Visual Studio 16"
+cd build_release && cmake -A x86 ..

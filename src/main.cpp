@@ -5,8 +5,6 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#include <SFML/Network.hpp>
-
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -79,63 +77,14 @@ int main()
         ImGui::NewFrame();
 
         ImGui::Text("Hello, world %d", 123);
-
-        // Test SFML Network
-        constexpr unsigned short port = 53000;
-        static bool serverError = false;
-        static bool asServer = false;
         if (ImGui::Button("As Server"))
         {
-            asServer = true;
-            sf::TcpListener listener;
-
-            // bind the listener to a port
-            if (listener.listen(port) != sf::Socket::Done) {
-                // error...
-                serverError = true;
-            }
-
-            // accept a new connection
-            if(!serverError)
-            {
-                sf::TcpSocket client;
-                if (listener.accept(client) != sf::Socket::Done) {
-                    // error...
-                    serverError = true;
-                }
-            }
         }
-        if (asServer) {
-            if (serverError) {
-                ImGui::Text("Server Error");
-            } else {
-                ImGui::Text("Server Ok");
-            }
-        }
-
 
         static bool clientError = false;
         if (ImGui::Button("Connect Server"))
         {
-            sf::TcpSocket socket;
-            sf::Socket::Status status = socket.connect("127.0.0.1", port);
-            if (status != sf::Socket::Done)
-            {
-                // error...
-                clientError = true;
-            }
         }
-        if(!asServer)
-        {
-            if(clientError)
-            {
-                ImGui::Text("Client Error");
-            }
-            else{
-                ImGui::Text("Client Ok");
-            }
-        }
-
 
         // Rendering
         ImGui::Render();
