@@ -4,6 +4,7 @@
 
 .vscode
 tags
+.idea/
 
 *.temp
 
