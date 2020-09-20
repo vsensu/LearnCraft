@@ -32,6 +32,8 @@ protected:
 private:
     int InitOpenGL();
     int InitImgui();
+    // Custom init
+    virtual void Init() {}
     virtual void FixedUpdate(double fixedDeltaTime) {}
     virtual void Update() {}
     virtual void RenderScene() {}
@@ -40,6 +42,7 @@ private:
     // no need to free memory in deconstructor, glfwTerminate will handle it.
     GLFWwindow* window_ {nullptr};
     Color clear_color_ { MakeColor(1.f, 1.f, 1.f, 1.f)};
+    bool init_ {false};
 };
 
 #endif //LEARNCRAFT_APPLICATION_H

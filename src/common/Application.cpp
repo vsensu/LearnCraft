@@ -92,6 +92,12 @@ int Application::InitImgui()
 
 int Application::Run()
 {
+	if(!init_)
+    {
+	    Init();
+	    init_ = true;
+    }
+
     // loop
     // -----------
     auto previous = std::chrono::steady_clock::now();
@@ -112,7 +118,6 @@ int Application::Run()
             continue;
 
         fps_ = static_cast<float>(1 / lag);
-        std::cout << fps_ << std::endl;
 
         while(lag >= g_update_freq)
         {
