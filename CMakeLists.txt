@@ -9,10 +9,12 @@ conan_basic_setup()
 include_directories(
         deps/glad/include
         src/platforms
+        src
 )
 
 add_executable(LearnCraft src/main.cpp deps/glad/src/glad.c src/platforms/imgui_impl_glfw.cpp src/platforms/imgui_impl_opengl3.cpp
-        src/platforms/imgui_impl_glfw.h src/platforms/imgui_impl_opengl3.h)
+        src/platforms/imgui_impl_glfw.h src/platforms/imgui_impl_opengl3.h
+        src/common/Application.cpp src/game/GameApplication.cpp)
 target_link_libraries(LearnCraft ${CONAN_LIBS})
 
 
