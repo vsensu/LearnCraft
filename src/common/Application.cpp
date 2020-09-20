@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <thread>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -106,15 +107,17 @@ int Application::Run()
         previous = current;
         lag += elapsed_seconds;
         delta_time_ = lag;
-        fps_ = static_cast<float>(1 / lag);
 
-        auto logic_previous = current;
+        if(lag < g_update_freq)
+            continue;
+
+        fps_ = static_cast<float>(1 / lag);
+        std::cout << fps_ << std::endl;
+
         while(lag >= g_update_freq)
         {
             FixedUpdate(g_update_freq);
-            auto logic_current = std::chrono::steady_clock::now();
-            auto logic_elapsed_seconds = std::chrono::duration<double>(logic_current-logic_previous).count();
-            lag -= logic_elapsed_seconds;
+            lag -= g_update_freq;
         }
 
         // render
