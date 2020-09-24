@@ -8,8 +8,8 @@
 #include <memory>
 
 #include "common/Application.h"
-
 #include "common/world/World.h"
+#include "common/Camera.h"
 
 class GameApplication : public Application
 {
@@ -22,6 +22,7 @@ private:
     void RenderUI() override;
 
     std::shared_ptr<World> world_ { std::make_shared<World>(32, 32, 32) };
+    Camera camera_;
 };
 
 #endif //LEARNCRAFT_GAMEAPPLICATION_H

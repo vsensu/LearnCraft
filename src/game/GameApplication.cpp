@@ -9,6 +9,7 @@
 #include <entt/entt.hpp>
 #include <imgui.h>
 
+
 void
 GameApplication::Init()
 {
@@ -16,7 +17,6 @@ GameApplication::Init()
 
 void GameApplication::Update()
 {
-
 }
 
 
