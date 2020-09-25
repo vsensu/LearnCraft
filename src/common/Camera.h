@@ -11,50 +11,52 @@
 class Camera
 {
 public:
-    inline auto View () const
+    [[maybe_unused]] inline auto View () const
     {
         return glm::lookAt(pos_, pos_ + forward_, up_);
     }
 
-    inline void MoveForward(double deltaTime)
+    [[maybe_unused]] inline void MoveForward(double deltaTime)
     {
-        float speed = 2.5f * deltaTime;
+        float speed = 2.5f * static_cast<float>(deltaTime);
         pos_ += forward_ * speed;
     }
 
-    inline void MoveBackward(double deltaTime)
+    [[maybe_unused]] inline void MoveBackward(double deltaTime)
     {
-        float speed = 2.5f * deltaTime;
+        float speed = 2.5f * static_cast<float>(deltaTime);
         pos_ -= forward_ * speed;
     }
 
-    inline void MoveLeft(double deltaTime)
+    [[maybe_unused]] inline void MoveLeft(double deltaTime)
     {
-        float speed = 2.5f * deltaTime;
+        float speed = 2.5f * static_cast<float>(deltaTime);
         pos_ -= glm::normalize(glm::cross(forward_, up_)) * speed;
     }
 
-    inline void MoveRight(double deltaTime)
+    [[maybe_unused]] inline void MoveRight(double deltaTime)
     {
-        float speed = 2.5f * deltaTime;
+        float speed = 2.5f * static_cast<float>(deltaTime);
         pos_ += glm::normalize(glm::cross(forward_, up_)) * speed;
     }
 
-    void MouseCallback(GLFWwindow *window, double xpos, double ypos)
+    [[maybe_unused]] void MouseCallback(GLFWwindow *window, double xpos, double ypos)
     {
+        auto xposf = static_cast<float>(xpos);
+        auto yposf = static_cast<float>(ypos);
         if(first_mouse_)
         {
-            last_x_ = xpos;
-            last_y_ = ypos;
+            last_x_ = xposf;
+            last_y_ = yposf;
             first_mouse_ = false;
         }
 
-        float xoffset = xpos - last_x_;
-        float yoffset = last_y_ - ypos;
-        last_x_ = xpos;
-        last_y_ = ypos;
+        float xoffset = xposf - last_x_;
+        float yoffset = last_y_ - yposf;
+        last_x_ = xposf;
+        last_y_ = yposf;
 
-        float sensitivity = 0.05;
+        float sensitivity = 0.05f;
         xoffset *= sensitivity;
         yoffset *= sensitivity;
 
@@ -73,15 +75,15 @@ public:
         forward_ = glm::normalize(front);
     }
 
-    inline auto Perspective (float aspect)
+    [[maybe_unused]] inline auto Perspective (float aspect)
     {
         return glm::perspective(glm::radians(fov_), aspect, 0.1f, 100.0f);
     }
 
-    void Zoom(double yoffset)
+    [[maybe_unused]] void Zoom(double yoffset)
     {
         if (fov_ >= 1.0f && fov_ <= 45.0f)
-            fov_ -= yoffset;
+            fov_ -= static_cast<float>(yoffset);
         if (fov_ <= 1.0f)
             fov_ = 1.0f;
         if (fov_ >= 45.0f)
