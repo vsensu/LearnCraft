@@ -106,8 +106,8 @@ void main() {
     y += chunkPosition.y;
     z += chunkPosition.z;
 
-    pos = vec3(x, y, z);
     gl_Position = proj * view * model * vec4(x, y, z, 1.0);
+    pos = vec3(model * vec4(x, y, z, 1.0));
 
     uint normalIndex = ((inVertexData & 0x7000u) >> 12u);
     normal = normals[normalIndex];
@@ -132,11 +132,11 @@ out vec4 FragColor;
 //uniform sampler2DArray textureArray;
 
 void main() {
-    vec3 lightColor = vec3(5.0f, 5.0f, 5.0f);
+    vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
     vec3 objectColor = vec3(1.0f, 0.5f, 0.31f);
     float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * lightColor;
-    vec3 lightPos = vec3(1.0f, 1.0f, -1.0f);
+    vec3 lightPos = vec3(3.0f, 3.0f, 3.0f);
     vec3 lightDir = normalize(lightPos - pos);
     float diff = max(dot(normal, lightDir), 0);
     vec3 diffuse = diff * lightColor;
@@ -179,7 +179,7 @@ GameApplication::Init()
     glEnable(GL_DEPTH_TEST);
 
     camera = &camera_;
-//    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window_, mouse_callback);
     glfwSetScrollCallback(window_, scroll_callback);
 
