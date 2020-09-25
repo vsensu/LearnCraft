@@ -79,24 +79,24 @@ uniform mat4 proj;
 uniform mat4 view;
 uniform mat4 model;
 
-//out vec3 passTexCoord;
-//out vec3 normal;
-//
-//vec2 texCoords[4] = vec2[4](
-//    vec2(0.0f, 0.0f),
-//    vec2(1.0f, 0.0f),
-//    vec2(1.0f, 1.0f),
-//    vec2(0.0f, 1.0f)
-//);
-//
-//vec3 normals[6] = vec3[6](
-//    vec3(1.0f, 0.0f, 0.0f),
-//    vec3(0.0f, 1.0f, 0.0f),
-//    vec3(0.0f, 0.0f, 1.0f),
-//    vec3(-1.0f, 0.0f, 0.0f),
-//    vec3(0.0f, -1.0f, 0.0f),
-//    vec3(0.0f, 0.0f, -1.0f)
-//);
+out vec3 passTexCoord;
+out vec3 normal;
+
+vec2 texCoords[4] = vec2[4](
+    vec2(0.0f, 0.0f),
+    vec2(1.0f, 0.0f),
+    vec2(1.0f, 1.0f),
+    vec2(0.0f, 1.0f)
+);
+
+vec3 normals[6] = vec3[6](
+    vec3(1.0f, 0.0f, 0.0f),
+    vec3(0.0f, 1.0f, 0.0f),
+    vec3(0.0f, 0.0f, 1.0f),
+    vec3(-1.0f, 0.0f, 0.0f),
+    vec3(0.0f, -1.0f, 0.0f),
+    vec3(0.0f, 0.0f, -1.0f)
+);
 
 void main() {
     float x = float(inVertexData & 0xFu);
@@ -106,32 +106,42 @@ void main() {
     y += chunkPosition.y;
     z += chunkPosition.z;
 
+    pos = vec3(x, y, z);
     gl_Position = proj * view * model * vec4(x, y, z, 1.0);
-//    gl_Position = vec4(x, y, z, 1.0);
 
-//    uint normalIndex = ((inVertexData & 0x7000u) >> 12u);
-//    normal = normals[normalIndex];
-//
-//    //Texture coords
-//    uint index = (inVertexData & 0x18000u) >> 15u;
-//    uint layer = (inVertexData & 0xFFFE0000u) >> 17u;
-//
-//    passTexCoord = vec3(texCoords[index], float(layer));
+    uint normalIndex = ((inVertexData & 0x7000u) >> 12u);
+    normal = normals[normalIndex];
+
+    //Texture coords
+    uint index = (inVertexData & 0x18000u) >> 15u;
+    uint layer = (inVertexData & 0xFFFE0000u) >> 17u;
+
+    passTexCoord = vec3(texCoords[index], float(layer));
 }
 )";
 
 constexpr auto fs_code = R"(
 #version 330 core
 
-//in vec3 normal;
-//in vec3 passTexCoord;
+in vec3 pos;
+in vec3 normal;
+in vec3 passTexCoord;
 
 out vec4 FragColor;
 
 //uniform sampler2DArray textureArray;
 
 void main() {
-    FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    vec3 lightColor = vec3(5.0f, 5.0f, 5.0f);
+    vec3 objectColor = vec3(1.0f, 0.5f, 0.31f);
+    float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * lightColor;
+    vec3 lightPos = vec3(1.0f, 1.0f, -1.0f);
+    vec3 lightDir = normalize(lightPos - pos);
+    float diff = max(dot(normal, lightDir), 0);
+    vec3 diffuse = diff * lightColor;
+    vec3 result = (ambient + diffuse) * objectColor;
+    FragColor = vec4(result, 1.0f);
 //    outColour = passBasicLight * texture(textureArray, passTexCoord);
 //    if (outColour.a == 0) {
 //        discard;
@@ -166,6 +176,8 @@ void add_face(ChunkMesh &mesh, const MeshFace &face, const VoxelLocalPosition &l
 void
 GameApplication::Init()
 {
+    glEnable(GL_DEPTH_TEST);
+
     camera = &camera_;
 //    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window_, mouse_callback);
@@ -215,6 +227,7 @@ void GameApplication::Update()
 
 void GameApplication::RenderScene()
 {
+    glClear(GL_DEPTH_BUFFER_BIT);
     shader->Use();
     glBindVertexArray(vao);
 

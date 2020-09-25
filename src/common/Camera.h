@@ -98,7 +98,7 @@ private:
     glm::vec3 up_ {glm::vec3(0.f, 1.f, 0.f)};
     glm::vec3 forward_ {glm::vec3(0.f, 0.f, -1.f)};
 
-    float yaw_ {0.f}, pitch_ {0.f}, roll_ {0.f};
+    float yaw_ {-90.f}, pitch_ {0.f}, roll_ {0.f};
     float fov_ {45.f};
 
     bool first_mouse_ {true};
