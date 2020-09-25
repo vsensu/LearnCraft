@@ -12,6 +12,8 @@
 
 #include <glad/glad.h>
 
+#include "gl_errors.h"
+
 struct ShaderUtils
 {
     static GLuint CreateShaderProgramFromFile(const std::string& vsPath, const std::string& fsPath)
@@ -176,6 +178,41 @@ struct Shader
     void SetUniform(const std::string &name, float v1, float v2, float v3, float v4)
     {
         glUniform4f(glGetUniformLocation(shaderProgram, name.c_str()), v1, v2, v3, v4);
+    }
+
+    inline auto GetUniformLocation(const std::string &name)
+    {
+        return glGetUniformLocation(shaderProgram, name.c_str());
+    }
+
+    void LoadUniform(const std::string &name, const glm::vec3& vector)
+    {
+        glCheck(glUniform3fv(GetUniformLocation(name), 1, glm::value_ptr(vector)));
+    }
+
+    void LoadUniform(const std::string &name, const glm::ivec3& vector)
+    {
+        glCheck(glUniform3iv(glUniform3fv(GetUniformLocation(name), 1, glm::value_ptr(vector))));
+    }
+
+    void LoadUniform(const std::string &name, const glm::mat4& matrix)
+    {
+        glCheck(glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix)));
+    }
+
+    void LoadUniform(const std::string &name, GLint value)
+    {
+        glCheck(glUniform1i(GetUniformLocation(name), value));
+    }
+
+    void LoadUniform(const std::string &name, GLuint value)
+    {
+        glCheck(glUniform1ui(GetUniformLocation(name), value));
+    }
+
+    void LoadUniform(const std::string &name, GLfloat value)
+    {
+        glCheck(glUniform1f(GetUniformLocation(name), value));
     }
 };
 

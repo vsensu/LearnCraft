@@ -104,10 +104,6 @@ int Application::Run()
     double lag = 0;
     while (!glfwWindowShouldClose(window_))
     {
-        // input
-        // -----
-        HandleKeyboard(window_);
-
         auto current = std::chrono::steady_clock::now();
         auto elapsed_seconds = std::chrono::duration<double>(current-previous).count();
         previous = current;
@@ -116,6 +112,10 @@ int Application::Run()
 
         if(lag < g_update_freq)
             continue;
+
+        // input
+        // -----
+        HandleKeyboard(window_);
 
         fps_ = static_cast<float>(1 / lag);
 

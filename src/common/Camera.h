@@ -93,7 +93,6 @@ public:
     inline auto GetPos() const { return pos_; }
     inline auto GetForward() const { return forward_; }
 
-
 private:
     glm::vec3 pos_{glm::vec3(0.f, 0.f, 3.f)};
     glm::vec3 up_ {glm::vec3(0.f, 1.f, 0.f)};

@@ -6,10 +6,16 @@
 
 #include <iostream>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <entt/entt.hpp>
 #include <imgui.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#define DEBUG_GL_ERRORS
+
+#include "common/gl_errors.h"
 
 namespace
 {
@@ -19,27 +25,59 @@ namespace
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-//const MeshFace FRONT_FACE = {
-//        {1, 1, 1,
-//         0, 1, 1,
-//         0, 0, 1,
-//         1, 0, 1},
-//         2};
 const MeshFace FRONT_FACE = {
-        {1, 1, 0,
-         1, 0, 0,
+        {1, 1, 1,
+         0, 1, 1,
+         0, 0, 1,
+         1, 0, 1},
+         2};
+
+const MeshFace LEFT_FACE = {
+        {0, 1, 1,
+         0, 1, 0,
          0, 0, 0,
-         0, 1, 0},
-        2};
+         0, 0, 1},
+        3};
+
+const MeshFace BACK_FACE = {
+        {0, 1, 0,
+         1, 1, 0,
+         1, 0, 0,
+         0, 0, 0},
+         5};
+
+const MeshFace RIGHT_FACE = {
+        {1, 1, 0,
+         1, 1, 1,
+         1, 0, 1,
+         1, 0, 0},
+        0};
+
+const MeshFace TOP_FACE = {
+        {1, 1, 0,
+         0, 1, 0,
+         0, 1, 1,
+         1, 1, 1},
+        1};
+
+const MeshFace BOTTOM_FACE = {
+        {0, 0, 0,
+         1, 0, 0,
+         1, 0, 1,
+         0, 0, 1},
+         4};
 
 constexpr auto vs_code = R"(
-#version 330
+#version 330 core
 
 layout (location = 0) in uint inVertexData;
+out vec3 pos;
 
-//uniform vec3 chunkPosition;
+uniform vec3 chunkPosition;
 
-//uniform mat4 projectionViewMatrix;
+uniform mat4 proj;
+uniform mat4 view;
+uniform mat4 model;
 
 //out vec3 passTexCoord;
 //out vec3 normal;
@@ -64,11 +102,12 @@ void main() {
     float x = float(inVertexData & 0xFu);
     float y = float((inVertexData & 0xF0u) >> 4u);
     float z = float((inVertexData & 0xF00u) >> 8u);
-//    x += chunkPosition.x;
-//    y += chunkPosition.y;
-//    z += chunkPosition.z;
-//    gl_Position = projectionViewMatrix * vec4(x, y, z, 1.0);
-    gl_Position = vec4(x,y,z, 1.0);
+    x += chunkPosition.x;
+    y += chunkPosition.y;
+    z += chunkPosition.z;
+
+    gl_Position = proj * view * model * vec4(x, y, z, 1.0);
+//    gl_Position = vec4(x, y, z, 1.0);
 
 //    uint normalIndex = ((inVertexData & 0x7000u) >> 12u);
 //    normal = normals[normalIndex];
@@ -82,7 +121,7 @@ void main() {
 )";
 
 constexpr auto fs_code = R"(
-#version 330
+#version 330 core
 
 //in vec3 normal;
 //in vec3 passTexCoord;
@@ -92,7 +131,7 @@ out vec4 FragColor;
 //uniform sampler2DArray textureArray;
 
 void main() {
-    FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 //    outColour = passBasicLight * texture(textureArray, passTexCoord);
 //    if (outColour.a == 0) {
 //        discard;
@@ -115,47 +154,31 @@ void add_face(ChunkMesh &mesh, const MeshFace &face, const VoxelLocalPosition &l
         mesh.vertices.push_back(vertex);
     }
 
-    auto index_count = mesh.indices.size();
-//    mesh.indices.push_back(index_count);
-//    mesh.indices.push_back(index_count + 1);
-//    mesh.indices.push_back(index_count + 2);
-//    mesh.indices.push_back(index_count + 2);
-//    mesh.indices.push_back(index_count + 3);
-//    mesh.indices.push_back(index_count);
-    mesh.indices.push_back(index_count);
-    mesh.indices.push_back(index_count + 1);
-    mesh.indices.push_back(index_count + 3);
-    mesh.indices.push_back(index_count + 1);
-    mesh.indices.push_back(index_count + 2);
-    mesh.indices.push_back(index_count + 3);
+    auto index_start = mesh.vertices.size() - 4;
+    mesh.indices.push_back(index_start);
+    mesh.indices.push_back(index_start + 1);
+    mesh.indices.push_back(index_start + 2);
+    mesh.indices.push_back(index_start + 2);
+    mesh.indices.push_back(index_start + 3);
+    mesh.indices.push_back(index_start);
 }
 
 void
 GameApplication::Init()
 {
     camera = &camera_;
-//    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+//    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window_, mouse_callback);
     glfwSetScrollCallback(window_, scroll_callback);
 
     shader = std::make_shared<Shader<CreateShaderProgramFromString>>(vs_code, fs_code);
 
     add_face(mesh, FRONT_FACE, VoxelLocalPosition(0, 0, 0), 0);
-
-//    glGenVertexArrays(1, &vao);
-//    glBindVertexArray(vao);
-//
-//    glGenBuffers(1, &vbo);
-//    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-//    std::cout << "vertex count : "<< mesh.vertices.size() << std::endl;
-//    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_t)*mesh.vertices.size(), mesh.vertices.data(), GL_STATIC_DRAW);
-//
-//    glGenBuffers(1, &ebo);
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-//    std::cout << "index count : "<< mesh.indices.size() << std::endl;
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_t)*mesh.indices.size(), mesh.indices.data(), GL_STATIC_DRAW);
-//    glVertexAttribPointer(0, 1, GL_UNSIGNED_INT, GL_FALSE, 0, (GLvoid*)0);
-//    glEnableVertexAttribArray(0);
+    add_face(mesh, BACK_FACE, VoxelLocalPosition(0, 0, 0), 0);
+    add_face(mesh, LEFT_FACE, VoxelLocalPosition(0, 0, 0), 0);
+    add_face(mesh, RIGHT_FACE, VoxelLocalPosition(0, 0, 0), 0);
+    add_face(mesh, TOP_FACE, VoxelLocalPosition(0, 0, 0), 0);
+    add_face(mesh, BOTTOM_FACE, VoxelLocalPosition(0, 0, 0), 0);
 
     // 顶点数组对象, 顶点缓冲对象, 索引缓冲对象
     glGenVertexArrays(1, &vao);
@@ -168,10 +191,10 @@ GameApplication::Init()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_t) * mesh.vertices.size(), mesh.vertices.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_t) * mesh.indices.size(), mesh.indices.data(), GL_STATIC_DRAW);
-    constexpr GLuint posLocation = 0;
-    constexpr GLint posFloatCount = 1;
-    glVertexAttribPointer(posLocation, posFloatCount, GL_UNSIGNED_INT, GL_FALSE, 0, nullptr);
-    glEnableVertexAttribArray(posLocation);
+    constexpr GLuint location = 0;
+    constexpr GLint floatCount = 1;
+    glVertexAttribIPointer(location, floatCount, GL_UNSIGNED_INT, 0, (GLvoid*)0);
+    glEnableVertexAttribArray(location);
 
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -193,11 +216,14 @@ void GameApplication::Update()
 void GameApplication::RenderScene()
 {
     shader->Use();
-//    shader->SetUniform("chunkPosition", glm::vec3(0, 0, -2));
-//    shader->SetUniform("projectionViewMatrix", camera_.Perspective(800.f/600) * camera_.View());
     glBindVertexArray(vao);
-//    glDrawArrays(GL_POINTS, 0, mesh.vertices.size());
-    glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, nullptr);
+
+    shader->LoadUniform("chunkPosition",glm::vec3(0, 0, 0));
+    shader->LoadUniform("proj", camera_.Perspective(800.f/600));
+    shader->LoadUniform("view", camera_.View());
+    shader->LoadUniform("model", glm::mat4(1.f));
+
+    glCheck(glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, nullptr));
 }
 
 void GameApplication::RenderUI()
@@ -235,6 +261,8 @@ void GameApplication::RenderUI()
 
     auto pos = camera_.GetPos();
     ImGui::Text("Camera pos:%f,%f,%f", pos.x, pos.y, pos.z);
+    auto forward = camera_.GetForward();
+    ImGui::Text("Camera forward:%f,%f,%f", forward.x, forward.y, forward.z);
 }
 
 void GameApplication::HandleKeyboard(GLFWwindow *window)
