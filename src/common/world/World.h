@@ -54,6 +54,8 @@ public:
 		return chunks_.find(index) != chunks_.end();
 	}
 
+	[[nodiscard]] inline int ChunkSize() const { return kChunkSizeX * kChunkSizeY * kChunkSizeZ; }
+
 	int kChunkSizeX{ 32 };
 	int kChunkSizeY{ 32 };
 	int kChunkSizeZ{ 32 };

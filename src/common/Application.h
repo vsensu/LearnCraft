@@ -6,6 +6,7 @@
 #define LEARNCRAFT_APPLICATION_H
 
 #include <tuple>
+#include <functional>
 
 struct GLFWwindow;
 
@@ -28,6 +29,7 @@ public:
 protected:
     double delta_time_;
     float fps_;
+    GLFWwindow* window_ {nullptr};
 
 private:
     int InitOpenGL();
@@ -38,10 +40,10 @@ private:
     virtual void Update() {}
     virtual void RenderScene() {}
     virtual void RenderUI() {}
+    virtual void HandleKeyboard(GLFWwindow *window) {}
 
     // no need to free memory in deconstructor, glfwTerminate will handle it.
-    GLFWwindow* window_ {nullptr};
-    Color clear_color_ { MakeColor(1.f, 1.f, 1.f, 1.f)};
+    Color clear_color_ { MakeColor(0.f, 0.f, 0.f, 1.f)};
     bool init_ {false};
 };
 

@@ -15,7 +15,6 @@
 #include "imgui_impl_opengl3.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -58,6 +57,7 @@ int Application::InitOpenGL()
     }
     glfwMakeContextCurrent(window_);
     glfwSetFramebufferSizeCallback(window_, framebuffer_size_callback);
+//    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -106,7 +106,7 @@ int Application::Run()
     {
         // input
         // -----
-        processInput(window_);
+        HandleKeyboard(window_);
 
         auto current = std::chrono::steady_clock::now();
         auto elapsed_seconds = std::chrono::duration<double>(current-previous).count();
@@ -166,7 +166,7 @@ int Application::Run()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
+void HandleKeyboard(GLFWwindow *window)
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
