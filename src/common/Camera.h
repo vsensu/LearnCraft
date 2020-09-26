@@ -18,25 +18,25 @@ public:
 
     [[maybe_unused]] inline void MoveForward(double deltaTime)
     {
-        float speed = 2.5f * static_cast<float>(deltaTime);
+        float speed = max_speed * static_cast<float>(deltaTime);
         pos_ += forward_ * speed;
     }
 
     [[maybe_unused]] inline void MoveBackward(double deltaTime)
     {
-        float speed = 2.5f * static_cast<float>(deltaTime);
+        float speed = max_speed * static_cast<float>(deltaTime);
         pos_ -= forward_ * speed;
     }
 
     [[maybe_unused]] inline void MoveLeft(double deltaTime)
     {
-        float speed = 2.5f * static_cast<float>(deltaTime);
+        float speed = max_speed * static_cast<float>(deltaTime);
         pos_ -= glm::normalize(glm::cross(forward_, up_)) * speed;
     }
 
     [[maybe_unused]] inline void MoveRight(double deltaTime)
     {
-        float speed = 2.5f * static_cast<float>(deltaTime);
+        float speed = max_speed * static_cast<float>(deltaTime);
         pos_ += glm::normalize(glm::cross(forward_, up_)) * speed;
     }
 
@@ -77,7 +77,7 @@ public:
 
     [[maybe_unused]] inline auto Perspective (float aspect)
     {
-        return glm::perspective(glm::radians(fov_), aspect, 0.1f, 100.0f);
+        return glm::perspective(glm::radians(fov_), aspect, 0.1f, 1000.0f);
     }
 
     [[maybe_unused]] void Zoom(double yoffset)
@@ -89,6 +89,8 @@ public:
         if (fov_ >= 45.0f)
             fov_ = 45.0f;
     }
+
+    void SetPos(glm::vec3 pos) { pos_ = pos; }
 
     inline auto GetPos() const { return pos_; }
     inline auto GetForward() const { return forward_; }
@@ -103,6 +105,7 @@ private:
 
     bool first_mouse_ {true};
     float last_x_ {400.f}, last_y_ {300.f};
+    float max_speed = 10.f;
 };
 
 #endif //MOT_CAMERA_H

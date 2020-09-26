@@ -107,23 +107,44 @@ int Application::Run()
         auto current = std::chrono::steady_clock::now();
         auto elapsed_seconds = std::chrono::duration<double>(current-previous).count();
         previous = current;
-        lag += elapsed_seconds;
-        delta_time_ = lag;
+        if(fixed_fps_)
+		{
+			lag += elapsed_seconds;
+			delta_time_ = lag;
+		}
+		else
+		{
+			delta_time_ = elapsed_seconds;
+		}
 
-        if(lag < g_update_freq)
+        if(fixed_fps_ && lag < g_update_freq)
             continue;
 
         // input
         // -----
         HandleKeyboard(window_);
 
-        fps_ = static_cast<float>(1 / lag);
+        if(fixed_fps_)
+		{
+			fps_ = static_cast<float>(1 / lag);
+		}
+		else
+		{
+			fps_ = static_cast<float>(1 / elapsed_seconds);
+		}
 
-        while(lag >= g_update_freq)
-        {
-            FixedUpdate(g_update_freq);
-            lag -= g_update_freq;
-        }
+		if(fixed_fps_)
+		{
+			while(lag >= g_update_freq)
+			{
+				FixedUpdate(g_update_freq);
+				lag -= g_update_freq;
+			}
+		}
+		else
+		{
+			FixedUpdate(g_update_freq);
+		}
 
         // render
         // ------

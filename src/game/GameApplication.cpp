@@ -12,10 +12,14 @@
 #include <imgui.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <common/NoiseTool.h>
 
 #define DEBUG_GL_ERRORS
 
 #include "common/gl_errors.h"
+#include "common/world/WorldConfig.h"
+#include "common/world/WorldUtils.h"
+#include "common/world/Chunk.h"
 
 namespace
 {
@@ -75,8 +79,7 @@ out vec3 pos;
 
 uniform vec3 chunkPosition;
 
-uniform mat4 proj;
-uniform mat4 view;
+uniform mat4 projView;
 uniform mat4 model;
 
 out vec3 passTexCoord;
@@ -106,7 +109,7 @@ void main() {
     y += chunkPosition.y;
     z += chunkPosition.z;
 
-    gl_Position = proj * view * model * vec4(x, y, z, 1.0);
+    gl_Position = projView * model * vec4(x, y, z, 1.0);
     pos = vec3(model * vec4(x, y, z, 1.0));
 
     uint normalIndex = ((inVertexData & 0x7000u) >> 12u);
@@ -134,14 +137,15 @@ out vec4 FragColor;
 void main() {
     vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
     vec3 objectColor = vec3(1.0f, 0.5f, 0.31f);
-    float ambientStrength = 0.1;
+    float ambientStrength = 0.3;
     vec3 ambient = ambientStrength * lightColor;
-    vec3 lightPos = vec3(3.0f, 3.0f, 3.0f);
+    vec3 lightPos = vec3(500.0f, 500.0f, 500.0f);
     vec3 lightDir = normalize(lightPos - pos);
     float diff = max(dot(normal, lightDir), 0);
     vec3 diffuse = diff * lightColor;
     vec3 result = (ambient + diffuse) * objectColor;
     FragColor = vec4(result, 1.0f);
+//    FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 //    outColour = passBasicLight * texture(textureArray, passTexCoord);
 //    if (outColour.a == 0) {
 //        discard;
@@ -149,14 +153,14 @@ void main() {
 }
 )";
 
-void add_face(ChunkMesh &mesh, const MeshFace &face, const VoxelLocalPosition &localPosition, u16 texture)
+void add_face(ChunkMesh &mesh, const MeshFace &face, const VoxelIndex &voxelIndex, u16 texture)
 {
     std::size_t index = 0;
     for(std::size_t i = 0; i < 4; ++i)
     {
-        u8 x = face.vertices[index++] + localPosition.x;
-        u8 y = face.vertices[index++] + localPosition.y;
-        u8 z = face.vertices[index++] + localPosition.z;
+        u8 x = face.vertices[index++] + voxelIndex.x;
+        u8 y = face.vertices[index++] + voxelIndex.y;
+        u8 z = face.vertices[index++] + voxelIndex.z;
 
         u32 vertex =
                 x | y << 4 | z << 8 | face.normal << 12 | i << 15 | texture << 17;
@@ -173,11 +177,97 @@ void add_face(ChunkMesh &mesh, const MeshFace &face, const VoxelLocalPosition &l
     mesh.indices.push_back(index_start);
 }
 
+void CreateChunkData(const Position &chunkPosition, ChunkData &chunkData)
+{
+	const int dirt_base = 60;
+	for(std::size_t x = 0; x < WorldConfig::kChunkSizeX; ++x)
+	{
+		for(std::size_t z = 0; z < WorldConfig::kChunkSizeZ; ++z)
+		{
+			auto horizontal = NoiseTool::GenerateHeightWithCache(chunkPosition.x + x, chunkPosition.z + z);
+			for( std::size_t y = 0; y < WorldConfig::kChunkSizeY; ++y)
+			{
+				auto& voxel = chunkData.chunk_data[WorldUtils::voxel_index_to_data_index(VoxelIndex{ x, y, z})];
+				int global_height = chunkPosition.y + y;
+				if (global_height > horizontal)
+				{
+					voxel = static_cast<voxel_t>(CommonVoxel::Air);
+				}
+				else if (global_height == horizontal)
+				{
+					voxel = static_cast<voxel_t>(CommonVoxel::Grass);
+				}
+				else if (voxel >= dirt_base)
+				{
+					voxel = static_cast<voxel_t>(CommonVoxel::Dirt);
+				}
+				else
+				{
+					voxel = static_cast<voxel_t>(CommonVoxel::Stone);
+				}
+			}
+		}
+	}
+}
+
+void CreateChunkMesh(World &world, ChunkMesh &mesh, const ChunkData &chunkData)
+{
+	for (std::size_t x = 0; x < WorldConfig::kChunkSizeX; ++x)
+	{
+		for (std::size_t y = 0; y < WorldConfig::kChunkSizeY; ++y)
+		{
+			for (std::size_t z = 0; z < WorldConfig::kChunkSizeZ; ++z)
+			{
+				auto voxel_index = VoxelIndex{ x, y, z };
+
+				if(world.IsVoxelTypeAir(chunkData.chunk_index, voxel_index))
+					continue;
+
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x, y, z + 1)))
+				{
+					add_face(mesh, FRONT_FACE, voxel_index, 0);
+				}
+
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x, y, z - 1)))
+				{
+					add_face(mesh, BACK_FACE, voxel_index, 0);
+				}
+
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x, y-1, z)))
+				{
+					add_face(mesh, BOTTOM_FACE, voxel_index, 0);
+				}
+
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x, y+1, z)))
+				{
+					add_face(mesh, TOP_FACE, voxel_index, 0);
+				}
+
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x-1, y, z)))
+				{
+					add_face(mesh, LEFT_FACE, voxel_index, 0);
+				}
+
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x+1, y, z)))
+				{
+					add_face(mesh, RIGHT_FACE, voxel_index, 0);
+				}
+			}
+		}
+	}
+}
+
 void
 GameApplication::Init()
 {
     glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
 
+	SetFixedFPS(0); // unlimit
+
+	NoiseTool::GenerateHeightCache(-100, -100, 100, 100);
     camera = &camera_;
     glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window_, mouse_callback);
@@ -185,39 +275,43 @@ GameApplication::Init()
 
     shader = std::make_shared<Shader<CreateShaderProgramFromString>>(vs_code, fs_code);
 
-    add_face(mesh, FRONT_FACE, VoxelLocalPosition(0, 0, 0), 0);
-    add_face(mesh, BACK_FACE, VoxelLocalPosition(0, 0, 0), 0);
-    add_face(mesh, LEFT_FACE, VoxelLocalPosition(0, 0, 0), 0);
-    add_face(mesh, RIGHT_FACE, VoxelLocalPosition(0, 0, 0), 0);
-    add_face(mesh, TOP_FACE, VoxelLocalPosition(0, 0, 0), 0);
-    add_face(mesh, BOTTOM_FACE, VoxelLocalPosition(0, 0, 0), 0);
+    for(int x = 0; x < 10; ++x)
+	{
+    	for(int z = 0; z < 10; ++z)
+		{
+    		for(int y = 0; y < 16; ++y)
+    		{
+    			ChunkIndex chunk_index {x, y, z};
+				auto *chunk = new Chunk(*world_);
+				auto *chunk_data = new ChunkData;
+				chunk_data->chunk_index = chunk_index;
+				CreateChunkData(WorldUtils::ChunkIndexToPosition(chunk_index), *chunk_data);
+				chunk->data = chunk_data;
+				world_->AddChunkData(chunk_index, chunk);
+    		}
+		}
+	}
 
-    // 顶点数组对象, 顶点缓冲对象, 索引缓冲对象
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
+	for(int x = 0; x < 10; ++x)
+	{
+		for(int z = 0; z < 10; ++z)
+		{
+			for(int y = 0; y < 16; ++y)
+			{
+				ChunkIndex chunk_index {x, y, z};
+				auto *mesh = new ChunkMesh;
+				auto *chunk_data = world_->GetChunkData(chunk_index)->data;
+				CreateChunkMesh(*world_, *mesh, *chunk_data);
+				vertex_count += mesh->vertices.size();
+				index_count += mesh->indices.size();
+				auto *chunk_buff = new ChunkBuffGL;
+				chunk_buff->CreateBuff(mesh->vertices, mesh->indices);
+				chunk_buffs[chunk_index] = chunk_buff;
+			}
+		}
+	}
 
-    // 绑定
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_t) * mesh.vertices.size(), mesh.vertices.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_t) * mesh.indices.size(), mesh.indices.data(), GL_STATIC_DRAW);
-    constexpr GLuint location = 0;
-    constexpr GLint floatCount = 1;
-    glVertexAttribIPointer(location, floatCount, GL_UNSIGNED_INT, 0, (GLvoid*)0);
-    glEnableVertexAttribArray(location);
-
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0);
-
+    camera_.SetPos(glm::vec3{0, 250, 3});
 }
 
 void GameApplication::Update()
@@ -229,14 +323,15 @@ void GameApplication::RenderScene()
 {
     glClear(GL_DEPTH_BUFFER_BIT);
     shader->Use();
-    glBindVertexArray(vao);
 
-    shader->LoadUniform("chunkPosition",glm::vec3(0, 0, 0));
-    shader->LoadUniform("proj", camera_.Perspective(800.f/600));
-    shader->LoadUniform("view", camera_.View());
+    shader->LoadUniform("projView", camera_.Perspective(800.f/600) * camera_.View());
     shader->LoadUniform("model", glm::mat4(1.f));
 
-    glCheck(glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, nullptr));
+    for(const auto &chunk_buff : chunk_buffs)
+	{
+		shader->LoadUniform("chunkPosition", WorldUtils::ChunkIndexToPosition(chunk_buff.first));
+		chunk_buff.second->draw();
+	}
 }
 
 void GameApplication::RenderUI()
@@ -250,7 +345,7 @@ void GameApplication::RenderUI()
 
     if(show)
 	{
-    	world_->voxel_manager.ForEach([](voxel_t t, const VoxelData &data){
+    	world_->voxel_manager.ForEach([](voxel_t t, const VoxelTypeData &data){
 			ImGui::Text(data.name.data());
 //			if(t == static_cast<voxel_t>(CommonVoxel::Air))
 //				try{
@@ -262,15 +357,7 @@ void GameApplication::RenderUI()
 //				}
 		});
 	}
-    ImGui::Text("vertex: %d index: %d", mesh.vertices.size(), mesh.indices.size());
-    for(std::size_t i = 0; i < mesh.vertices.size(); ++i)
-    {
-        auto inVertexData = mesh.vertices[i];
-        float x = float(inVertexData & 0xFu);
-        float y = float((inVertexData & 0xF0u) >> 4u);
-        float z = float((inVertexData & 0xF00u) >> 8u);
-        ImGui::Text("%f, %f, %f", x, y, z);
-    }
+//    ImGui::Text("vertex: %d index: %d", mesh.vertices.size(), mesh.indices.size());
 
     auto pos = camera_.GetPos();
     ImGui::Text("Camera pos:%f,%f,%f", pos.x, pos.y, pos.z);

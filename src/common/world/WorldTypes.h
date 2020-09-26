@@ -5,9 +5,17 @@
 #ifndef LEARNCRAFT_SRC_COMMON_WORLD_WORLDTYPES_H
 #define LEARNCRAFT_SRC_COMMON_WORLD_WORLDTYPES_H
 
+#include <string>
+#include <tuple>
+#include <glm/glm.hpp>
+
+#include "common/types.h"
+
 using BlockType = std::string;
+//using ChunkIndex = glm::i32vec3;
 using ChunkIndex = std::tuple<i32, i32, i32>;
-using VoxelLocalPosition = glm::u8vec3;
+using VoxelIndex = glm::u8vec3;
+using Position = glm::vec3;
 using voxel_t = u16;
 
 enum class CubeSide : u8

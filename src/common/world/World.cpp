@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "Chunk.h"
+#include "WorldUtils.h"
 
 struct CustomData
 {
@@ -10,17 +11,19 @@ struct CustomData
 };
 
 
-World::World(int sx, int sy, int sz)
-	: kChunkSizeX(sx), kChunkSizeY(sy), kChunkSizeZ(sz)
+World::World()
 {
 	CustomData a {10};
-	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Air), VoxelData { "Air", false, a }))
+	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Air), VoxelTypeData { "Air", false, true, a }))
 	{
 	}
-	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Dirt), VoxelData { "Dirt", true }))
+	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Dirt), VoxelTypeData { "Dirt", true, false }))
 	{
 	}
-	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Grass), VoxelData { "Grass", true }))
+	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Grass), VoxelTypeData { "Grass", true, false }))
+	{
+	}
+	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Stone), VoxelTypeData { "Stone", true, false }))
 	{
 	}
 }
@@ -32,29 +35,6 @@ World::~World()
 		delete chunk.second;
 	}
 	chunks_.clear();
-}
-
-Chunk*
-World::CreateChunkData(ChunkIndex index)
-{
-	if (auto chunk_data = GetChunkData(index); chunk_data != nullptr)
-		return chunk_data;
-
-	auto chunk = new Chunk(*this, index);
-	chunk->CreateChunkData();
-	chunks_[index] = chunk;
-	return chunk;
-}
-
-Chunk*
-World::LoadChunkData(ChunkIndex index)
-{
-	if (auto chunk_data = GetChunkData(index); chunk_data != nullptr)
-		return chunk_data;
-
-	auto chunk = Chunk::Load(*this, index);
-	chunks_[index] = chunk;
-	return chunk;
 }
 
 Chunk*
@@ -70,75 +50,60 @@ World::GetChunkData(ChunkIndex index) const
 	}
 }
 
-void
-World::DestroyChunkData(ChunkIndex index)
-{
-	if (auto result = chunks_.find(index); result != chunks_.end())
-	{
-		delete result->second;
-		chunks_.erase(result);
-	}
-}
-
 voxel_t
 World::GetVoxel(float x, float y, float z) const
 {
 	// Get chunk
-	auto chunk_index = GetChunkIndexViaLocation(x, y, z);
+	auto chunk_index = WorldUtils::GetChunkIndexViaLocation(x, y, z);
 
 	// return block
-	auto* chunk_data = GetChunkData(chunk_index);
+	return GetVoxel(chunk_index, WorldUtils::GlobalLocationToVoxelIndex(x, y, z));
+}
+
+voxel_t
+World::GetVoxel(const Position& pos) const
+{
+	// Get chunk
+	auto chunk_index = WorldUtils::GetChunkIndexViaLocation(pos.x, pos.y, pos.z);
+
+	// return block
+	return GetVoxel(chunk_index, WorldUtils::GlobalLocationToVoxelIndex(pos.x, pos.y, pos.z));
+}
+
+voxel_t
+World::GetVoxel(const ChunkIndex& chunkIndex, const VoxelIndex& voxelIndex) const
+{
+	auto* chunk_data = GetChunkData(chunkIndex);
 	if (chunk_data != nullptr)
 	{
-		auto[block_x, block_y, block_z] = BlockGlobalLocationToChunkLocation(x, y, z);
-		if (block_x < 0 || block_y < 0 || block_z < 0 || block_x > World::kChunkSizeX - 1
-			|| block_y > World::kChunkSizeY - 1 || block_z > World::kChunkSizeZ - 1)
+		if (WorldUtils::IsVoxelOutOfChunkBounds(voxelIndex))
 		{
 //			UE_LOG(LogTemp, Warning, TEXT("block %d, %d, %d index not valid"), block_x, block_y, block_z);
 			return make_air_voxel();
 		}
-		return chunk_data->GetVoxel(VoxelLocalPosition(block_x, block_y, block_z));
+		return chunk_data->GetVoxel(VoxelIndex(voxelIndex.x, voxelIndex.y, voxelIndex.z));
 	}
 	else
 	{
-		auto[index_x, index_y, index_z] = chunk_index;
+		auto[index_x, index_y, index_z] = chunkIndex;
 //		UE_LOG(LogTemp, Warning, TEXT("chunk %d, %d, %d not found"), index_x, index_y, index_z);
 		return make_air_voxel();
 	}
 }
 
-bool
-World::SetVoxel(float x, float y, float z, voxel_t t)
-{
-	auto chunk_index = GetChunkIndexViaLocation(x, y, z);
-	auto* chunk_data = GetChunkData(chunk_index);
-	if (chunk_data != nullptr)
-	{
-		auto[block_x, block_y, block_z] = BlockGlobalLocationToChunkLocation(x, y, z);
-		chunk_data->SetVoxel(VoxelLocalPosition(block_x, block_y, block_z), t);
-		return true;
-	}
-	return false;
-}
-
-ChunkIndex
-World::GetChunkIndexViaLocation(float x, float y, float z) const
-{
-	int index_x = static_cast<int>(std::floor(x / kChunkSizeX));
-	int index_y = static_cast<int>(std::floor(y / kChunkSizeY));
-	int index_z = static_cast<int>(std::floor(z / kChunkSizeZ));
-	return std::make_tuple(index_x, index_y, index_z);
-}
-
-std::tuple<int, int, int>
-World::BlockGlobalLocationToChunkLocation(float x, float y, float z) const
-{
-	auto[chunk_index_x, chunk_index_y, chunk_index_z] = GetChunkIndexViaLocation(x, y, z);
-	int block_x = static_cast<int>(std::floor(x - chunk_index_x * kChunkSizeX));
-	int block_y = static_cast<int>(std::floor(y - chunk_index_y * kChunkSizeY));
-	int block_z = static_cast<int>(std::floor(z - chunk_index_z * kChunkSizeZ));
-	return std::make_tuple(block_x, block_y, block_z);
-}
+//bool
+//World::SetVoxel(float x, float y, float z, voxel_t t)
+//{
+//	auto chunk_index = WorldUtils::GetChunkIndexViaLocation(x, y, z);
+//	auto* chunk_data = GetChunkData(chunk_index);
+//	if (chunk_data != nullptr)
+//	{
+//		auto voxel_index = WorldUtils::GlobalLocationToVoxelIndex(x, y, z);
+//		chunk_data->SetVoxel(voxel_index, t);
+//		return true;
+//	}
+//	return false;
+//}
 
 void
 World::Save()
@@ -161,4 +126,70 @@ bool
 World::IsChunkStored(ChunkIndex index)
 {
 	return Chunk::IsStored(index);
+}
+voxel_t
+World::GetVoxelViaUnboundIndex(const ChunkIndex& chunkIndex, const VoxelIndex& unboundIndex)
+{
+	if(WorldUtils::IsVoxelOutOfChunkBounds(unboundIndex))
+	{
+		// neighbour
+		auto[index_x, index_y, index_z] = chunkIndex;
+		auto x = unboundIndex.x, y = unboundIndex.y, z = unboundIndex.z;
+		if (x < 0)
+		{
+			index_x--;
+			x = WorldConfig::kChunkSizeX - 1;
+		}
+		else if (x > WorldConfig::kChunkSizeX - 1)
+		{
+			index_x++;
+			x = 0;
+		}
+
+		if (y < 0)
+		{
+			index_y--;
+			y = WorldConfig::kChunkSizeY - 1;
+		}
+		else if (y > WorldConfig::kChunkSizeY - 1)
+		{
+			index_y++;
+			y = 0;
+		}
+
+		if (z < 0)
+		{
+			index_z--;
+			z = WorldConfig::kChunkSizeZ - 1;
+		}
+		else if (z > WorldConfig::kChunkSizeZ - 1)
+		{
+			index_z++;
+			z = 0;
+		}
+
+		auto new_chunk_index = std::make_tuple(index_x, index_y, index_z);
+		if (new_chunk_index == chunkIndex)
+		{
+//			UE_LOG(LogTemp, Warning, TEXT("Recursive chunk: %d,%d,%d"), index_x, index_y, index_z);
+			return static_cast<voxel_t>(CommonVoxel::Stone);
+		}
+
+		// TODO: Optimize, cache neighbor chunk data
+		auto chunk_data = GetChunkData(new_chunk_index);
+		if (nullptr == chunk_data)
+		{
+			// 邻接区块为null时，认为是固体
+			return static_cast<voxel_t>(CommonVoxel::Stone);
+		}
+		else
+		{
+			auto new_voxel_index = VoxelIndex(x, y, z);
+			return GetVoxel(new_chunk_index, new_voxel_index);
+		}
+	}
+	else
+	{
+		return GetVoxel(chunkIndex, unboundIndex);
+	}
 }

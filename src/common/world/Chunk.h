@@ -3,35 +3,24 @@
 #include <array>
 
 #include "World.h"
+#include "WorldConfig.h"
+#include "WorldUtils.h"
 
 class Chunk
 {
 public:
-	Chunk(World& world, ChunkIndex index);
+	Chunk(World& world);
 
 	~Chunk();
 
-	[[nodiscard]] inline bool IsVoxelOutOfChunkBounds(const VoxelLocalPosition &voxelPosition) const {
-		return
-			 voxelPosition.x >= mWorld.kChunkSizeX ||
-				 voxelPosition.y >= mWorld.kChunkSizeY ||
-					voxelPosition.z >= mWorld.kChunkSizeZ;
-	}
-
-	void
-	CreateChunkData();
-
-	bool
-	IsSolid(const VoxelLocalPosition &localPos);
-
 	voxel_t
-	GetVoxel(const VoxelLocalPosition &localPos) const
+	GetVoxel(const VoxelIndex &voxelIndex) const
 	{
-		return voxels_[localPos.x][localPos.y][localPos.z];
+		return data->chunk_data[WorldUtils::voxel_index_to_data_index(voxelIndex)];
 	}
 
-	bool
-	SetVoxel(const VoxelLocalPosition &localPos, voxel_t t);
+//	bool
+//	SetVoxel(const VoxelIndex &localPos, voxel_t t);
 
 	void
 	Save();
@@ -42,12 +31,7 @@ public:
 	static bool
 	IsStored(ChunkIndex index);
 
-private:
+//private:
 	World& mWorld;
-	ChunkIndex chunkIndex;
-	// Block voxels_[World::kChunkSizeX][World::kChunkSizeY][World::kChunkSizeZ]; // x,y,z
-	voxel_t *** voxels_{ nullptr }; // x,y,z
-	int chunkStartIndexX;
-	int chunkStartIndexY;
-	int chunkStartIndexZ;
+	ChunkData *data;
 };

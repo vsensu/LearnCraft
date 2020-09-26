@@ -26,6 +26,19 @@ public:
         return std::make_tuple(r, g, b, a);
     }
 
+    void SetFixedFPS(int fps)
+	{
+    	if(fps < 1)
+		{
+    		fixed_fps_ = false;
+		}
+		else
+		{
+			// TODO: fixed fps
+			fixed_fps_ = true;
+		}
+	}
+
 protected:
     double delta_time_;
     float fps_;
@@ -45,6 +58,7 @@ private:
     // no need to free memory in deconstructor, glfwTerminate will handle it.
     Color clear_color_ { MakeColor(0.f, 0.f, 0.f, 1.f)};
     bool init_ {false};
+    bool fixed_fps_ { true };
 };
 
 #endif //LEARNCRAFT_APPLICATION_H
