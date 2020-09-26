@@ -194,12 +194,12 @@ void add_face(ChunkMesh &mesh, const MeshFace &face, const VoxelIndex &voxelInde
 void CreateChunkData(const Position &chunkPosition, ChunkData &chunkData)
 {
 	const int dirt_base = 60;
-	for(std::size_t x = 0; x < WorldConfig::kChunkSizeX; ++x)
+	for(int x = 0; x < WorldConfig::kChunkSizeX; ++x)
 	{
-		for(std::size_t z = 0; z < WorldConfig::kChunkSizeZ; ++z)
+		for(int z = 0; z < WorldConfig::kChunkSizeZ; ++z)
 		{
 			auto horizontal = NoiseTool::GenerateHeightWithCache(chunkPosition.x + x, chunkPosition.z + z);
-			for( std::size_t y = 0; y < WorldConfig::kChunkSizeY; ++y)
+			for(int y = 0; y < WorldConfig::kChunkSizeY; ++y)
 			{
 				auto& voxel = chunkData.chunk_data[WorldUtils::voxel_index_to_data_index(VoxelIndex{ x, y, z})];
 				int global_height = chunkPosition.y + y;
@@ -291,11 +291,15 @@ GameApplication::Init()
 
     shader = std::make_shared<Shader<CreateShaderProgramFromString>>(vs_code, fs_code);
 
-    for(int x = 0; x < 10; ++x)
+    int center_x = 0, center_z = 0;
+    int initSize = 5;
+    int chunk_vertical = 16;
+
+    for(int x = center_x-initSize; x < center_x + initSize; ++x)
 	{
-    	for(int z = 0; z < 10; ++z)
+    	for(int z = center_z-initSize; z < center_z+initSize; ++z)
 		{
-    		for(int y = 0; y < 16; ++y)
+    		for(int y = 0; y < chunk_vertical; ++y)
     		{
     			ChunkIndex chunk_index {x, y, z};
 				auto *chunk = new Chunk(*world_);
@@ -308,11 +312,11 @@ GameApplication::Init()
 		}
 	}
 
-	for(int x = 0; x < 10; ++x)
+	for(int x = center_x-initSize; x < center_x + initSize; ++x)
 	{
-		for(int z = 0; z < 10; ++z)
+		for(int z = center_z-initSize; z < center_z+initSize; ++z)
 		{
-			for(int y = 0; y < 16; ++y)
+			for(int y = 0; y < chunk_vertical; ++y)
 			{
 				ChunkIndex chunk_index {x, y, z};
 				auto *mesh = new ChunkMesh;
