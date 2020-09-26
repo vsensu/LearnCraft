@@ -14,9 +14,9 @@ public:
 	[[nodiscard]] static inline bool IsVoxelOutOfChunkBounds(const VoxelIndex &voxelIndex)
 	{
 		return
-			voxelIndex.x >= WorldConfig::kChunkSizeX ||
-				voxelIndex.y >= WorldConfig::kChunkSizeY ||
-				voxelIndex.z >= WorldConfig::kChunkSizeZ;
+		voxelIndex.x < 0 || voxelIndex.x >= WorldConfig::kChunkSizeX ||
+				voxelIndex.y < 0 || voxelIndex.y >= WorldConfig::kChunkSizeY ||
+					voxelIndex.z < 0 || voxelIndex.z >= WorldConfig::kChunkSizeZ;
 	}
 
 	static ChunkIndex

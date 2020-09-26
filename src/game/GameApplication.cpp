@@ -82,16 +82,7 @@ uniform vec3 chunkPosition;
 uniform mat4 projView;
 uniform mat4 model;
 
-out vec3 passTexCoord;
 out vec3 normal;
-
-vec2 texCoords[4] = vec2[4](
-    vec2(0.0f, 0.0f),
-    vec2(1.0f, 0.0f),
-    vec2(1.0f, 1.0f),
-    vec2(0.0f, 1.0f)
-);
-
 vec3 normals[6] = vec3[6](
     vec3(1.0f, 0.0f, 0.0f),
     vec3(0.0f, 1.0f, 0.0f),
@@ -100,6 +91,25 @@ vec3 normals[6] = vec3[6](
     vec3(0.0f, -1.0f, 0.0f),
     vec3(0.0f, 0.0f, -1.0f)
 );
+
+out vec3 objectColor;
+vec3 objectColors[4] = vec3[4](
+	vec3(1, 1, 1),
+	vec3(1.0f, 0.5f, 0.31f),
+	vec3(0, 1, 0),
+	vec3(0.8, 0.8, 0.8)
+);
+
+//out vec3 passTexCoord;
+//
+//vec2 texCoords[4] = vec2[4](
+//    vec2(0.0f, 0.0f),
+//    vec2(1.0f, 0.0f),
+//    vec2(1.0f, 1.0f),
+//    vec2(0.0f, 1.0f)
+//);
+//
+
 
 void main() {
     float x = float(inVertexData & 0xFu);
@@ -119,7 +129,9 @@ void main() {
     uint index = (inVertexData & 0x18000u) >> 15u;
     uint layer = (inVertexData & 0xFFFE0000u) >> 17u;
 
-    passTexCoord = vec3(texCoords[index], float(layer));
+	objectColor = objectColors[layer];
+
+//    passTexCoord = vec3(texCoords[index], float(layer));
 }
 )";
 
@@ -128,7 +140,9 @@ constexpr auto fs_code = R"(
 
 in vec3 pos;
 in vec3 normal;
-in vec3 passTexCoord;
+
+in vec3 objectColor;
+//in vec3 passTexCoord;
 
 out vec4 FragColor;
 
@@ -136,8 +150,8 @@ out vec4 FragColor;
 
 void main() {
     vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
-    vec3 objectColor = vec3(1.0f, 0.5f, 0.31f);
-    float ambientStrength = 0.3;
+//    vec3 objectColor = textures[layer];
+    float ambientStrength = 0.2;
     vec3 ambient = ambientStrength * lightColor;
     vec3 lightPos = vec3(500.0f, 500.0f, 500.0f);
     vec3 lightDir = normalize(lightPos - pos);
@@ -212,45 +226,47 @@ void CreateChunkData(const Position &chunkPosition, ChunkData &chunkData)
 
 void CreateChunkMesh(World &world, ChunkMesh &mesh, const ChunkData &chunkData)
 {
-	for (std::size_t x = 0; x < WorldConfig::kChunkSizeX; ++x)
+	for (int x = 0; x < WorldConfig::kChunkSizeX; ++x)
 	{
-		for (std::size_t y = 0; y < WorldConfig::kChunkSizeY; ++y)
+		for (int y = 0; y < WorldConfig::kChunkSizeY; ++y)
 		{
-			for (std::size_t z = 0; z < WorldConfig::kChunkSizeZ; ++z)
+			for (int z = 0; z < WorldConfig::kChunkSizeZ; ++z)
 			{
 				auto voxel_index = VoxelIndex{ x, y, z };
+
+				auto texture = static_cast<u16>(chunkData.chunk_data[WorldUtils::voxel_index_to_data_index(voxel_index)]);
 
 				if(world.IsVoxelTypeAir(chunkData.chunk_index, voxel_index))
 					continue;
 
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x, y, z + 1)))
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x, y, z + 1)))
 				{
-					add_face(mesh, FRONT_FACE, voxel_index, 0);
+					add_face(mesh, FRONT_FACE, voxel_index, texture);
 				}
 
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x, y, z - 1)))
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x, y, z - 1)))
 				{
-					add_face(mesh, BACK_FACE, voxel_index, 0);
+					add_face(mesh, BACK_FACE, voxel_index, texture);
 				}
 
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x, y-1, z)))
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x, y-1, z)))
 				{
-					add_face(mesh, BOTTOM_FACE, voxel_index, 0);
+					add_face(mesh, BOTTOM_FACE, voxel_index, texture);
 				}
 
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x, y+1, z)))
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x, y+1, z)))
 				{
-					add_face(mesh, TOP_FACE, voxel_index, 0);
+					add_face(mesh, TOP_FACE, voxel_index, texture);
 				}
 
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x-1, y, z)))
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x-1, y, z)))
 				{
-					add_face(mesh, LEFT_FACE, voxel_index, 0);
+					add_face(mesh, LEFT_FACE, voxel_index, texture);
 				}
 
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, VoxelIndex(x+1, y, z)))
+				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x+1, y, z)))
 				{
-					add_face(mesh, RIGHT_FACE, voxel_index, 0);
+					add_face(mesh, RIGHT_FACE, voxel_index, texture);
 				}
 			}
 		}
@@ -311,7 +327,8 @@ GameApplication::Init()
 		}
 	}
 
-    camera_.SetPos(glm::vec3{0, 250, 3});
+	auto height = NoiseTool::GenerateHeightWithCache(0, 0);
+    camera_.SetPos(glm::vec3{0, height + 5, 0});
 }
 
 void GameApplication::Update()

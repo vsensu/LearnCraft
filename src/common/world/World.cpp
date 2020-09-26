@@ -128,13 +128,13 @@ World::IsChunkStored(ChunkIndex index)
 	return Chunk::IsStored(index);
 }
 voxel_t
-World::GetVoxelViaUnboundIndex(const ChunkIndex& chunkIndex, const VoxelIndex& unboundIndex)
+World::GetVoxelViaUnboundIndex(const ChunkIndex& chunkIndex, const UnboundVoxelIndex& unboundIndex)
 {
 	if(WorldUtils::IsVoxelOutOfChunkBounds(unboundIndex))
 	{
 		// neighbour
 		auto[index_x, index_y, index_z] = chunkIndex;
-		auto x = unboundIndex.x, y = unboundIndex.y, z = unboundIndex.z;
+		int x = unboundIndex.x, y = unboundIndex.y, z = unboundIndex.z;
 		if (x < 0)
 		{
 			index_x--;

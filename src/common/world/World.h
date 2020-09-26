@@ -71,12 +71,12 @@ public:
 		return voxel_manager.GetType(GetVoxel(pos)).solid;
 	}
 
-	inline bool IsVoxelTypeSolidUnbound(const ChunkIndex& chunkIndex, const VoxelIndex& unboundIndex)
+	inline bool IsVoxelTypeSolidUnbound(const ChunkIndex& chunkIndex, const UnboundVoxelIndex& unboundIndex)
 	{
 		return voxel_manager.GetType(GetVoxelViaUnboundIndex(chunkIndex, unboundIndex)).solid;
 	}
 
-	voxel_t GetVoxelViaUnboundIndex(const ChunkIndex& chunkIndex, const VoxelIndex& unboundIndex);
+	voxel_t GetVoxelViaUnboundIndex(const ChunkIndex& chunkIndex, const UnboundVoxelIndex& unboundIndex);
 
 	void AddChunkData(const ChunkIndex &chunkIndex, Chunk *chunk)
 	{
