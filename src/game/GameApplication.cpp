@@ -212,6 +212,7 @@ void GameApplication::RenderScene()
 
 	const ViewFrustum& frustum = camera_.GetFrustum();
 	static float sightRange = 80.0f;
+	vertex_draw_count_ = 0;
     for(const auto &chunk_buff : chunk_buffs)
 	{
     	if(WorldUtils::ChunkIsInSightRange(camera_.GetPos(), chunk_buff.first, sightRange))
@@ -220,6 +221,7 @@ void GameApplication::RenderScene()
 			{
 				shader->LoadUniform("chunkPosition", WorldUtils::ChunkIndexToPosition(chunk_buff.first));
 				chunk_buff.second->draw();
+				vertex_draw_count_ += chunk_buff.second->index_count;
 			}
 		}
 	}
@@ -229,6 +231,7 @@ void GameApplication::RenderUI()
 {
     ImGui::Begin("Debug");
     ImGui::Text("fps: %d", static_cast<int>(fps_ + 0.5));
+    ImGui::Text("Press F1 to toggle cursor");
     static bool show = false;
     if(ImGui::Button("Show voxel info"))
 	{
@@ -255,6 +258,7 @@ void GameApplication::RenderUI()
     ImGui::Text("Camera pos:%f,%f,%f", pos.x, pos.y, pos.z);
     auto forward = camera_.GetForward();
     ImGui::Text("Camera forward:%f,%f,%f", forward.x, forward.y, forward.z);
+    ImGui::Text("draw vertex:%lu", (vertex_draw_count_ * 3u) >> 1);
     ImGui::End();
 }
 
