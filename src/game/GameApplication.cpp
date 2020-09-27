@@ -12,7 +12,7 @@
 #include <imgui.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <common/NoiseTool.h>
+#include <stb_image/stb_image.h>
 
 #define DEBUG_GL_ERRORS
 
@@ -20,6 +20,7 @@
 #include "common/world/WorldConfig.h"
 #include "common/world/WorldUtils.h"
 #include "common/world/Chunk.h"
+#include "common/NoiseTool.h"
 
 namespace
 {
@@ -82,6 +83,8 @@ uniform vec3 chunkPosition;
 uniform mat4 projView;
 uniform mat4 model;
 
+uniform float texUnit;
+
 out vec3 normal;
 vec3 normals[6] = vec3[6](
     vec3(1.0f, 0.0f, 0.0f),
@@ -92,7 +95,7 @@ vec3 normals[6] = vec3[6](
     vec3(0.0f, 0.0f, -1.0f)
 );
 
-out vec3 objectColor;
+//out vec3 objectColor;
 vec3 objectColors[4] = vec3[4](
 	vec3(1, 1, 1),
 	vec3(1.0f, 0.5f, 0.31f),
@@ -100,16 +103,14 @@ vec3 objectColors[4] = vec3[4](
 	vec3(0.8, 0.8, 0.8)
 );
 
-//out vec3 passTexCoord;
-//
-//vec2 texCoords[4] = vec2[4](
-//    vec2(0.0f, 0.0f),
-//    vec2(1.0f, 0.0f),
-//    vec2(1.0f, 1.0f),
-//    vec2(0.0f, 1.0f)
-//);
-//
+out vec2 passTexCoord;
 
+vec2 texCoords[4] = vec2[4](
+    vec2(0.0f, 0.0f),
+    vec2(1.0f, 0.0f),
+    vec2(1.0f, 1.0f),
+    vec2(0.0f, 1.0f)
+);
 
 void main() {
     float x = float(inVertexData & 0xFu);
@@ -129,9 +130,10 @@ void main() {
     uint index = (inVertexData & 0x18000u) >> 15u;
     uint layer = (inVertexData & 0xFFFE0000u) >> 17u;
 
-	objectColor = objectColors[layer];
+//	objectColor = objectColors[layer];
 
-//    passTexCoord = vec3(texCoords[index], float(layer));
+    passTexCoord = vec2(texCoords[index].x, texCoords[index].y * texUnit + layer * texUnit);
+//    passTexCoord = texCoords[index];
 }
 )";
 
@@ -141,16 +143,17 @@ constexpr auto fs_code = R"(
 in vec3 pos;
 in vec3 normal;
 
-in vec3 objectColor;
-//in vec3 passTexCoord;
+//in vec3 objectColor;
+in vec2 passTexCoord;
 
 out vec4 FragColor;
 
+uniform sampler2D voxelTexture;
 //uniform sampler2DArray textureArray;
 
 void main() {
     vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
-//    vec3 objectColor = textures[layer];
+    vec3 objectColor = texture(voxelTexture, passTexCoord).rgb;
     float ambientStrength = 0.2;
     vec3 ambient = ambientStrength * lightColor;
     vec3 lightPos = vec3(500.0f, 500.0f, 500.0f);
@@ -283,6 +286,35 @@ GameApplication::Init()
 
 	SetFixedFPS(0); // unlimit
 
+    // 创建纹理对象
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    // 为当前绑定的纹理对象设置环绕、过滤方式
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // 加载生成纹理
+    int w, h, nrChannels;
+    std::vector<std::string> textures = {
+            "Textures/dirt.jpg",
+            "Textures/dirt.jpg",
+            "Textures/grass.jpg",
+            "Textures/stone.jpg",
+    };
+    unsigned char texture_data[16*16*4*3];
+    for(int i = 0; i < textures.size(); ++i)
+    {
+        unsigned char *data = stbi_load(textures[i].c_str(), &w, &h, &nrChannels, 0);
+        memcpy(texture_data + i*16*16*3, data, 16*16*3);
+        if(data)
+        {
+            stbi_image_free(data);
+        }
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0 /*mipmap*/, GL_RGB, 16, 16*textures.size(), 0/*legacy*/, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
 	NoiseTool::GenerateHeightCache(-100, -100, 100, 100);
     camera = &camera_;
     glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -333,6 +365,7 @@ GameApplication::Init()
 
 	auto height = NoiseTool::GenerateHeightWithCache(0, 0);
     camera_.SetPos(glm::vec3{0, height + 5, 0});
+
 }
 
 void GameApplication::Update()
@@ -344,9 +377,12 @@ void GameApplication::RenderScene()
 {
     glClear(GL_DEPTH_BUFFER_BIT);
     shader->Use();
+    // 绑定纹理
+    glBindTexture(GL_TEXTURE_2D, texture);
 
     shader->LoadUniform("projView", camera_.Perspective(800.f/600) * camera_.View());
     shader->LoadUniform("model", glm::mat4(1.f));
+    shader->LoadUniform("texUnit", 0.25f);
 
     for(const auto &chunk_buff : chunk_buffs)
 	{

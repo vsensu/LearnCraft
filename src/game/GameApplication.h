@@ -97,6 +97,7 @@ private:
     std::size_t index_count;
     std::shared_ptr<Shader<CreateShaderProgramFromString>> shader {nullptr};
     std::unordered_map<ChunkIndex, ChunkBuffGL*, hash_tuple> chunk_buffs;
+    GLuint texture;
 };
 
 #endif //LEARNCRAFT_GAMEAPPLICATION_H
