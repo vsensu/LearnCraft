@@ -151,7 +151,7 @@ GameApplication::Init()
     shader = std::make_shared<Shader<CreateShaderProgramFromString>>(vs_code, fs_code);
 
     int center_x = 0, center_z = 0;
-    int initSize = 5;
+    int initSize = 10;
     int chunk_vertical = 16;
 
     DefaultGenerator generator;
@@ -195,6 +195,7 @@ GameApplication::Init()
 
 void GameApplication::Update()
 {
+	camera_.Update(delta_time_);
 }
 
 
@@ -209,10 +210,18 @@ void GameApplication::RenderScene()
     shader->LoadUniform("model", glm::mat4(1.f));
     shader->LoadUniform("texUnit", 0.25f);
 
+	const ViewFrustum& frustum = camera_.GetFrustum();
+	static float sightRange = 80.0f;
     for(const auto &chunk_buff : chunk_buffs)
 	{
-		shader->LoadUniform("chunkPosition", WorldUtils::ChunkIndexToPosition(chunk_buff.first));
-		chunk_buff.second->draw();
+    	if(WorldUtils::ChunkIsInSightRange(camera_.GetPos(), chunk_buff.first, sightRange))
+		{
+			if(WorldUtils::chunkIsInFrustum(frustum, chunk_buff.first))
+			{
+				shader->LoadUniform("chunkPosition", WorldUtils::ChunkIndexToPosition(chunk_buff.first));
+				chunk_buff.second->draw();
+			}
+		}
 	}
 }
 

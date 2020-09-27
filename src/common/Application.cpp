@@ -146,6 +146,8 @@ int Application::Run()
 			FixedUpdate(g_update_freq);
 		}
 
+		Update();
+
         // render
         // ------
         auto [r, g, b, a] = clear_color_;

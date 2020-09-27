@@ -7,6 +7,20 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <array>
+#include <GLFW/glfw3.h>
+
+struct Plane {
+	float distanceToPoint(const glm::vec3& point) const;
+
+	float distanceToOrigin;
+	glm::vec3 normal;
+};
+
+struct ViewFrustum {
+	void update(const glm::mat4& projViewMatrix) noexcept;
+	std::array<Plane, 6> m_planes;
+};
 
 class Camera
 {
@@ -77,6 +91,7 @@ public:
 
     [[maybe_unused]] inline auto Perspective (float aspect)
     {
+		aspect_ = aspect;
         return glm::perspective(glm::radians(fov_), aspect, 0.1f, 1000.0f);
     }
 
@@ -94,6 +109,9 @@ public:
 
     inline auto GetPos() const { return pos_; }
     inline auto GetForward() const { return forward_; }
+	inline const ViewFrustum& GetFrustum() const { return m_frustum; }
+
+	void Update(double deltaTime) { m_frustum.update(Perspective(aspect_) * View()); }
 
 private:
     glm::vec3 pos_{glm::vec3(0.f, 0.f, 3.f)};
@@ -103,9 +121,12 @@ private:
     float yaw_ {-90.f}, pitch_ {0.f}, roll_ {0.f};
     float fov_ {45.f};
 
+    float aspect_ { 1.0f };
     bool first_mouse_ {true};
     float last_x_ {400.f}, last_y_ {300.f};
     float max_speed = 10.f;
+
+	ViewFrustum m_frustum;
 };
 
 #endif //MOT_CAMERA_H

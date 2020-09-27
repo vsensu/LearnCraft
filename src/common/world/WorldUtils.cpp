@@ -27,3 +27,62 @@ WorldUtils::VoxelIndexToGlobalLocation(const VoxelIndex& voxelIndex)
 {
 	return Position{};
 }
+
+bool
+WorldUtils::ChunkIsInSightRange(const Position& cameraPos, const ChunkIndex& chunkIndex, float sightRange)
+{
+	auto [chunk_x, chunk_y, chunk_z] = chunkIndex;
+	return std::pow(cameraPos.x - chunk_x * WorldConfig::kChunkSizeX, 2) +
+		std::pow(cameraPos.y - chunk_y * WorldConfig::kChunkSizeY, 2) +
+		std::pow(cameraPos.z - chunk_z * WorldConfig::kChunkSizeZ, 2) <=
+		std::pow(sightRange, 2);
+}
+
+bool WorldUtils::chunkIsInFrustum(const ViewFrustum &frustum, const ChunkIndex &chunkIndex) noexcept
+{
+//	box *= CHUNK_SIZE;
+	auto box = WorldUtils::ChunkIndexToPosition(chunkIndex);
+
+	auto getVP = [&](const glm::vec3& normal) {
+		auto res = box;
+
+		if (normal.x > 0) {
+			res.x += WorldConfig::kChunkSizeX;
+		}
+		if (normal.y > 0) {
+			res.y += WorldConfig::kChunkSizeY;
+		}
+		if (normal.z > 0) {
+			res.z += WorldConfig::kChunkSizeZ;
+		}
+
+		return glm::vec3{res.x, res.y, res.z};
+	};
+
+	auto getVN = [&](const glm::vec3& normal) {
+		auto res = box;
+
+		if (normal.x < 0) {
+			res.x += WorldConfig::kChunkSizeX;
+		}
+		if (normal.y < 0) {
+			res.y += WorldConfig::kChunkSizeY;
+		}
+		if (normal.z < 0) {
+			res.z += WorldConfig::kChunkSizeZ;
+		}
+
+		return glm::vec3{res.x, res.y, res.z};
+	};
+
+	bool result = true;
+	for (auto& plane : frustum.m_planes) {
+		if (plane.distanceToPoint(getVP(plane.normal)) < 0) {
+			return false;
+		}
+		else if (plane.distanceToPoint(getVN(plane.normal)) < 0) {
+			result = true;
+		}
+	}
+	return result;
+}

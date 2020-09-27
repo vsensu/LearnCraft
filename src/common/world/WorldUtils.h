@@ -5,8 +5,11 @@
 #ifndef LEARNCRAFT_SRC_COMMON_WORLD_WORLDUTILS_H
 #define LEARNCRAFT_SRC_COMMON_WORLD_WORLDUTILS_H
 
+#include <array>
+
 #include "WorldTypes.h"
 #include "WorldConfig.h"
+#include "common/Camera.h"
 
 class WorldUtils
 {
@@ -41,6 +44,9 @@ public:
 	{
 		return static_cast<voxel_t>(CommonVoxel::Air);
 	}
+
+	static bool ChunkIsInSightRange(const Position &cameraPos, const ChunkIndex &chunkIndex, float sightRange);
+	static bool chunkIsInFrustum(const ViewFrustum &frustum, const ChunkIndex &chunkIndex) noexcept;
 };
 
 #endif //LEARNCRAFT_SRC_COMMON_WORLD_WORLDUTILS_H
