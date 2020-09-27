@@ -12,9 +12,11 @@ template<typename IDType, typename DataType>
 class TypeManager
 {
 public:
-	[[nodiscard]] inline bool RegisterType(IDType t, const DataType &data) { typeid_typedata_[t] = data; return true; }
-	[[nodiscard]] inline const DataType& GetType(IDType t) { return typeid_typedata_[t]; }
-	void ForEach(std::function<void(IDType, const DataType&)> func)
+    virtual ~TypeManager() {}
+
+	[[nodiscard]] virtual bool RegisterType(const IDType &t, const DataType &data) { typeid_typedata_[t] = data; return true; }
+	[[nodiscard]] inline const DataType& GetTypeData(const IDType &t) { return typeid_typedata_[t]; }
+	void ForEach(std::function<void(const IDType&, const DataType&)> func)
 	{
 		for(const auto &pair : typeid_typedata_)
 		{
@@ -22,7 +24,7 @@ public:
 		}
 	}
 
-private:
+protected:
 	std::unordered_map<IDType, DataType> typeid_typedata_;
 };
 

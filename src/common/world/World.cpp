@@ -13,17 +13,34 @@ struct CustomData
 
 World::World()
 {
+    texture_manager_.RegisterTexture("Air", "Textures/dirt.jpg");
+    texture_manager_.RegisterTexture("Dirt", "Textures/dirt.jpg");
+    texture_manager_.RegisterTexture("Grass", "Textures/grass.jpg");
+    texture_manager_.RegisterTexture("Stone", "Textures/stone.jpg");
+
 	CustomData a {10};
-	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Air), VoxelTypeData { "Air", false, true, a }))
+	if(!voxel_manager_.RegisterType(static_cast<voxel_t>(CommonVoxel::Air),
+                                 VoxelTypeData {"Air", false, true,
+                                                {.front = "Dirt", .back = "Dirt", .left = "Dirt", .right = "Dirt", .top = "Dirt", .bottom = "Dirt"},
+                                                a }))
 	{
 	}
-	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Dirt), VoxelTypeData { "Dirt", true, false }))
+    if (!voxel_manager_.RegisterType(static_cast<voxel_t>(CommonVoxel::Dirt),
+                                     VoxelTypeData{"Dirt", true, false,
+                                                   {.front = "Dirt", .back = "Dirt", .left = "Dirt", .right = "Dirt", .top = "Dirt", .bottom = "Dirt"},
+                                     }))
 	{
 	}
-	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Grass), VoxelTypeData { "Grass", true, false }))
+    if (!voxel_manager_.RegisterType(static_cast<voxel_t>(CommonVoxel::Grass),
+                                     VoxelTypeData{"Grass", true, false,
+                                                   {.front = "Grass", .back = "Grass", .left = "Grass", .right = "Grass", .top = "Grass", .bottom = "Grass"},
+                                     }))
 	{
 	}
-	if(!voxel_manager.RegisterType(static_cast<voxel_t>(CommonVoxel::Stone), VoxelTypeData { "Stone", true, false }))
+    if (!voxel_manager_.RegisterType(static_cast<voxel_t>(CommonVoxel::Stone),
+                                     VoxelTypeData{"Stone", true, false,
+                                                   {.front = "Stone", .back = "Stone", .left = "Stone", .right = "Stone", .top = "Stone", .bottom = "Stone"},
+                                     }))
 	{
 	}
 }
@@ -79,7 +96,7 @@ World::GetVoxel(const ChunkIndex& chunkIndex, const VoxelIndex& voxelIndex) cons
 		if (WorldUtils::IsVoxelOutOfChunkBounds(voxelIndex))
 		{
 //			UE_LOG(LogTemp, Warning, TEXT("block %d, %d, %d index not valid"), block_x, block_y, block_z);
-			return make_air_voxel();
+			return WorldUtils::make_air_voxel();
 		}
 		return chunk_data->GetVoxel(VoxelIndex(voxelIndex.x, voxelIndex.y, voxelIndex.z));
 	}
@@ -87,7 +104,7 @@ World::GetVoxel(const ChunkIndex& chunkIndex, const VoxelIndex& voxelIndex) cons
 	{
 		auto[index_x, index_y, index_z] = chunkIndex;
 //		UE_LOG(LogTemp, Warning, TEXT("chunk %d, %d, %d not found"), index_x, index_y, index_z);
-		return make_air_voxel();
+		return WorldUtils::make_air_voxel();
 	}
 }
 

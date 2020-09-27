@@ -9,28 +9,9 @@
 #include "common/HashTuple.h"
 #include "common/types.h"
 #include "VoxelManager.h"
+#include "TextureManager.h"
 #include "WorldTypes.h"
 #include "WorldConfig.h"
-
-//class Block
-//{
-//public:
-//	Block() = default;
-//
-//	BlockType Type;
-//	bool IsSolid{ true };
-//};
-
-inline voxel_t make_air_voxel()
-{
-	return 0;
-}
-
-struct ChunkData
-{
-	ChunkIndex chunk_index;
-	std::array<voxel_t , WorldConfig::ChunkSize()> chunk_data;
-};
 
 class World
 {
@@ -53,32 +34,32 @@ public:
 
 	inline bool IsVoxelTypeAir(const ChunkIndex& chunkIndex, const VoxelIndex &voxelIndex)
 	{
-		return voxel_manager.GetType(GetVoxel(chunkIndex, voxelIndex)).air;
+		return voxel_manager_.GetTypeData(GetVoxel(chunkIndex, voxelIndex)).air;
 	}
 
 	inline bool IsVoxelTypeAir(const Position &pos)
 	{
-		return voxel_manager.GetType(GetVoxel(pos)).air;
+		return voxel_manager_.GetTypeData(GetVoxel(pos)).air;
 	}
 
 	inline bool IsVoxelTypeSolid(const ChunkIndex& chunkIndex, const VoxelIndex &voxelIndex)
 	{
-		return voxel_manager.GetType(GetVoxel(chunkIndex, voxelIndex)).solid;
+		return voxel_manager_.GetTypeData(GetVoxel(chunkIndex, voxelIndex)).solid;
 	}
 
 	inline bool IsVoxelTypeSolid(const Position &pos)
 	{
-		return voxel_manager.GetType(GetVoxel(pos)).solid;
+		return voxel_manager_.GetTypeData(GetVoxel(pos)).solid;
 	}
 
 	inline bool IsVoxelTypeSolidUnbound(const ChunkIndex& chunkIndex, const UnboundVoxelIndex& unboundIndex)
 	{
-		return voxel_manager.GetType(GetVoxelViaUnboundIndex(chunkIndex, unboundIndex)).solid;
+		return voxel_manager_.GetTypeData(GetVoxelViaUnboundIndex(chunkIndex, unboundIndex)).solid;
 	}
 
 	voxel_t GetVoxelViaUnboundIndex(const ChunkIndex& chunkIndex, const UnboundVoxelIndex& unboundIndex);
 
-	void AddChunkData(const ChunkIndex &chunkIndex, Chunk *chunk)
+	void AddChunk(const ChunkIndex &chunkIndex, Chunk *chunk)
 	{
 		chunks_[chunkIndex] = chunk;
 	}
@@ -92,16 +73,40 @@ public:
 		return chunks_.find(index) != chunks_.end();
 	}
 
+    tex_t GetVoxelTextureLayer(voxel_t voxel, CubeSide side)
+    {
+        switch (side) {
+            case CubeSide::Top:
+                return texture_manager_.GetVoxelTextureLayer(voxel_manager_.GetTypeData(voxel).textures.top);
+            case CubeSide::Bottom:
+                return texture_manager_.GetVoxelTextureLayer(voxel_manager_.GetTypeData(voxel).textures.bottom);
+            case CubeSide::Left:
+                return texture_manager_.GetVoxelTextureLayer(voxel_manager_.GetTypeData(voxel).textures.left);
+            case CubeSide::Right:
+                return texture_manager_.GetVoxelTextureLayer(voxel_manager_.GetTypeData(voxel).textures.right);
+            case CubeSide::Front:
+                return texture_manager_.GetVoxelTextureLayer(voxel_manager_.GetTypeData(voxel).textures.front);
+            case CubeSide::Back:
+                return texture_manager_.GetVoxelTextureLayer(voxel_manager_.GetTypeData(voxel).textures.back);
+        }
+        return texture_manager_.GetVoxelTextureLayer(voxel_manager_.GetTypeData(voxel).textures.top);
+    }
 
-
-	void
-	Save();
+    void
+    Save();
 	void
 	Load();
 	bool
 	IsChunkStored(ChunkIndex index);
 
-	VoxelManager voxel_manager;
+	inline VoxelManager&
+	GetVoxelManager() { return voxel_manager_; }
+
+    inline TextureManager&
+    GetTextureManager() { return texture_manager_; }
+
 private:
+    VoxelManager voxel_manager_;
+	TextureManager texture_manager_;
 	std::unordered_map<ChunkIndex, class Chunk*, hash_tuple> chunks_;
 };

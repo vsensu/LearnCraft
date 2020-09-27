@@ -18,6 +18,7 @@ using VoxelIndex = glm::u8vec3;
 using UnboundVoxelIndex = glm::i8vec3;
 using Position = glm::vec3;
 using voxel_t = u16;
+using tex_t = u16;
 
 enum class CubeSide : u8
 {

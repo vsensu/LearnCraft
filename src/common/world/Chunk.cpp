@@ -10,25 +10,6 @@
 
 //#include "Common/Path.h"
 
-Chunk::Chunk(World& world)
-	: mWorld(world)
-{
-
-}
-
-Chunk::~Chunk()
-{
-}
-
-//bool
-//Chunk::SetVoxel(const VoxelIndex &voxelIndex, voxel_t t)
-//{
-//	if (WorldUtils::IsVoxelOutOfChunkBounds(voxelIndex))
-//		return false;
-//	voxels_[voxelIndex.x][voxelIndex.y][voxelIndex.z] = t;
-//	return true;
-//}
-
 void
 Chunk::Save()
 {

@@ -6,21 +6,29 @@
 #include "WorldConfig.h"
 #include "WorldUtils.h"
 
-class Chunk
+class Chunk final
 {
 public:
-	Chunk(World& world);
-
-	~Chunk();
+	Chunk(World& world, const ChunkIndex &chunkIndex) : world_(world), chunk_index_(chunkIndex) {}
 
 	voxel_t
 	GetVoxel(const VoxelIndex &voxelIndex) const
 	{
-		return data->chunk_data[WorldUtils::voxel_index_to_data_index(voxelIndex)];
+		return voxels_[WorldUtils::voxel_index_to_data_index(voxelIndex)];
 	}
 
-//	bool
-//	SetVoxel(const VoxelIndex &localPos, voxel_t t);
+	bool
+	SetVoxel(const VoxelIndex &voxelIndex, voxel_t t)
+    {
+	    if(WorldUtils::IsVoxelOutOfChunkBounds(voxelIndex))
+	        return false;
+
+        voxels_[WorldUtils::voxel_index_to_data_index(voxelIndex)] = t;
+	    return true;
+    }
+
+    inline const ChunkIndex &
+    GetChunkIndex() const { return chunk_index_; }
 
 	void
 	Save();
@@ -31,7 +39,8 @@ public:
 	static bool
 	IsStored(ChunkIndex index);
 
-//private:
-	World& mWorld;
-	ChunkData *data;
+private:
+	World& world_;
+    ChunkIndex chunk_index_;
+    std::array<voxel_t , WorldConfig::ChunkSize()> voxels_;
 };

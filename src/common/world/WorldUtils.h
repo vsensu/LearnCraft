@@ -36,6 +36,11 @@ public:
 	{
 		return voxelIndex.x * (WorldConfig::kChunkSizeY * WorldConfig::kChunkSizeZ) + voxelIndex.z * WorldConfig::kChunkSizeY + voxelIndex.y;
 	}
+
+	static inline voxel_t make_air_voxel()
+	{
+		return static_cast<voxel_t>(CommonVoxel::Air);
+	}
 };
 
 #endif //LEARNCRAFT_SRC_COMMON_WORLD_WORLDUTILS_H

@@ -21,6 +21,8 @@
 #include "common/world/WorldUtils.h"
 #include "common/world/Chunk.h"
 #include "common/NoiseTool.h"
+#include "common/world/ChunkGenerator.h"
+#include "common/world/ChunkRender.h"
 
 namespace
 {
@@ -29,48 +31,6 @@ namespace
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-
-const MeshFace FRONT_FACE = {
-        {1, 1, 1,
-         0, 1, 1,
-         0, 0, 1,
-         1, 0, 1},
-         2};
-
-const MeshFace LEFT_FACE = {
-        {0, 1, 1,
-         0, 1, 0,
-         0, 0, 0,
-         0, 0, 1},
-        3};
-
-const MeshFace BACK_FACE = {
-        {0, 1, 0,
-         1, 1, 0,
-         1, 0, 0,
-         0, 0, 0},
-         5};
-
-const MeshFace RIGHT_FACE = {
-        {1, 1, 0,
-         1, 1, 1,
-         1, 0, 1,
-         1, 0, 0},
-        0};
-
-const MeshFace TOP_FACE = {
-        {1, 1, 0,
-         0, 1, 0,
-         0, 1, 1,
-         1, 1, 1},
-        1};
-
-const MeshFace BOTTOM_FACE = {
-        {0, 0, 0,
-         1, 0, 0,
-         1, 0, 1,
-         0, 0, 1},
-         4};
 
 constexpr auto vs_code = R"(
 #version 330 core
@@ -170,112 +130,6 @@ void main() {
 }
 )";
 
-void add_face(ChunkMesh &mesh, const MeshFace &face, const VoxelIndex &voxelIndex, u16 texture)
-{
-    std::size_t index = 0;
-    for(std::size_t i = 0; i < 4; ++i)
-    {
-        u8 x = face.vertices[index++] + voxelIndex.x;
-        u8 y = face.vertices[index++] + voxelIndex.y;
-        u8 z = face.vertices[index++] + voxelIndex.z;
-
-        u32 vertex =
-                x | y << 4 | z << 8 | face.normal << 12 | i << 15 | texture << 17;
-
-        mesh.vertices.push_back(vertex);
-    }
-
-    auto index_start = mesh.vertices.size() - 4;
-    mesh.indices.push_back(index_start);
-    mesh.indices.push_back(index_start + 1);
-    mesh.indices.push_back(index_start + 2);
-    mesh.indices.push_back(index_start + 2);
-    mesh.indices.push_back(index_start + 3);
-    mesh.indices.push_back(index_start);
-}
-
-void CreateChunkData(const Position &chunkPosition, ChunkData &chunkData)
-{
-	const int dirt_base = 60;
-	for(int x = 0; x < WorldConfig::kChunkSizeX; ++x)
-	{
-		for(int z = 0; z < WorldConfig::kChunkSizeZ; ++z)
-		{
-			auto horizontal = NoiseTool::GenerateHeightWithCache(chunkPosition.x + x, chunkPosition.z + z);
-			for(int y = 0; y < WorldConfig::kChunkSizeY; ++y)
-			{
-				auto& voxel = chunkData.chunk_data[WorldUtils::voxel_index_to_data_index(VoxelIndex{ x, y, z})];
-				int global_height = chunkPosition.y + y;
-				if (global_height > horizontal)
-				{
-					voxel = static_cast<voxel_t>(CommonVoxel::Air);
-				}
-				else if (global_height == horizontal)
-				{
-					voxel = static_cast<voxel_t>(CommonVoxel::Grass);
-				}
-				else if (voxel >= dirt_base)
-				{
-					voxel = static_cast<voxel_t>(CommonVoxel::Dirt);
-				}
-				else
-				{
-					voxel = static_cast<voxel_t>(CommonVoxel::Stone);
-				}
-			}
-		}
-	}
-}
-
-void CreateChunkMesh(World &world, ChunkMesh &mesh, const ChunkData &chunkData)
-{
-	for (int x = 0; x < WorldConfig::kChunkSizeX; ++x)
-	{
-		for (int y = 0; y < WorldConfig::kChunkSizeY; ++y)
-		{
-			for (int z = 0; z < WorldConfig::kChunkSizeZ; ++z)
-			{
-				auto voxel_index = VoxelIndex{ x, y, z };
-
-				auto texture = static_cast<u16>(chunkData.chunk_data[WorldUtils::voxel_index_to_data_index(voxel_index)]);
-
-				if(world.IsVoxelTypeAir(chunkData.chunk_index, voxel_index))
-					continue;
-
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x, y, z + 1)))
-				{
-					add_face(mesh, FRONT_FACE, voxel_index, texture);
-				}
-
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x, y, z - 1)))
-				{
-					add_face(mesh, BACK_FACE, voxel_index, texture);
-				}
-
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x, y-1, z)))
-				{
-					add_face(mesh, BOTTOM_FACE, voxel_index, texture);
-				}
-
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x, y+1, z)))
-				{
-					add_face(mesh, TOP_FACE, voxel_index, texture);
-				}
-
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x-1, y, z)))
-				{
-					add_face(mesh, LEFT_FACE, voxel_index, texture);
-				}
-
-				if (!world.IsVoxelTypeSolidUnbound(chunkData.chunk_index, UnboundVoxelIndex(x+1, y, z)))
-				{
-					add_face(mesh, RIGHT_FACE, voxel_index, texture);
-				}
-			}
-		}
-	}
-}
-
 void
 GameApplication::Init()
 {
@@ -286,34 +140,7 @@ GameApplication::Init()
 
 	SetFixedFPS(0); // unlimit
 
-    // 创建纹理对象
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    // 为当前绑定的纹理对象设置环绕、过滤方式
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // 加载生成纹理
-    int w, h, nrChannels;
-    std::vector<std::string> textures = {
-            "Textures/dirt.jpg",
-            "Textures/dirt.jpg",
-            "Textures/grass.jpg",
-            "Textures/stone.jpg",
-    };
-    unsigned char texture_data[16*16*4*3];
-    for(int i = 0; i < textures.size(); ++i)
-    {
-        unsigned char *data = stbi_load(textures[i].c_str(), &w, &h, &nrChannels, 0);
-        memcpy(texture_data + i*16*16*3, data, 16*16*3);
-        if(data)
-        {
-            stbi_image_free(data);
-        }
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0 /*mipmap*/, GL_RGB, 16, 16*textures.size(), 0/*legacy*/, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    world_->GetTextureManager().CreateTexture();
 
 	NoiseTool::GenerateHeightCache(-100, -100, 100, 100);
     camera = &camera_;
@@ -327,6 +154,7 @@ GameApplication::Init()
     int initSize = 5;
     int chunk_vertical = 16;
 
+    DefaultGenerator generator;
     for(int x = center_x-initSize; x < center_x + initSize; ++x)
 	{
     	for(int z = center_z-initSize; z < center_z+initSize; ++z)
@@ -334,12 +162,9 @@ GameApplication::Init()
     		for(int y = 0; y < chunk_vertical; ++y)
     		{
     			ChunkIndex chunk_index {x, y, z};
-				auto *chunk = new Chunk(*world_);
-				auto *chunk_data = new ChunkData;
-				chunk_data->chunk_index = chunk_index;
-				CreateChunkData(WorldUtils::ChunkIndexToPosition(chunk_index), *chunk_data);
-				chunk->data = chunk_data;
-				world_->AddChunkData(chunk_index, chunk);
+				auto *chunk = new Chunk(*world_, chunk_index);
+                generator.CreateChunkData(WorldUtils::ChunkIndexToPosition(chunk_index), *chunk);
+                world_->AddChunk(chunk_index, chunk);
     		}
 		}
 	}
@@ -352,8 +177,8 @@ GameApplication::Init()
 			{
 				ChunkIndex chunk_index {x, y, z};
 				auto *mesh = new ChunkMesh;
-				auto *chunk_data = world_->GetChunkData(chunk_index)->data;
-				CreateChunkMesh(*world_, *mesh, *chunk_data);
+				auto *chunk = world_->GetChunkData(chunk_index);
+				ChunkMeshUtils::CreateChunkMesh(*world_, *mesh, *chunk);
 				vertex_count += mesh->vertices.size();
 				index_count += mesh->indices.size();
 				auto *chunk_buff = new ChunkBuffGL;
@@ -378,7 +203,7 @@ void GameApplication::RenderScene()
     glClear(GL_DEPTH_BUFFER_BIT);
     shader->Use();
     // 绑定纹理
-    glBindTexture(GL_TEXTURE_2D, texture);
+    world_->GetTextureManager().Bind();
 
     shader->LoadUniform("projView", camera_.Perspective(800.f/600) * camera_.View());
     shader->LoadUniform("model", glm::mat4(1.f));
@@ -393,6 +218,7 @@ void GameApplication::RenderScene()
 
 void GameApplication::RenderUI()
 {
+    ImGui::Begin("Debug");
     ImGui::Text("fps: %d", static_cast<int>(fps_ + 0.5));
     static bool show = false;
     if(ImGui::Button("Show voxel info"))
@@ -402,7 +228,7 @@ void GameApplication::RenderUI()
 
     if(show)
 	{
-    	world_->voxel_manager.ForEach([](voxel_t t, const VoxelTypeData &data){
+    	world_->GetVoxelManager().ForEach([](voxel_t t, const VoxelTypeData &data){
 			ImGui::Text(data.name.data());
 //			if(t == static_cast<voxel_t>(CommonVoxel::Air))
 //				try{
@@ -420,10 +246,12 @@ void GameApplication::RenderUI()
     ImGui::Text("Camera pos:%f,%f,%f", pos.x, pos.y, pos.z);
     auto forward = camera_.GetForward();
     ImGui::Text("Camera forward:%f,%f,%f", forward.x, forward.y, forward.z);
+    ImGui::End();
 }
 
 void GameApplication::HandleKeyboard(GLFWwindow *window)
 {
+    static bool cursor_key_pressed = false;
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -434,6 +262,18 @@ void GameApplication::HandleKeyboard(GLFWwindow *window)
         camera_.MoveLeft(delta_time_);
     if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera_.MoveRight(delta_time_);
+    if(glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
+        cursor_key_pressed = true;
+    if(cursor_key_pressed && glfwGetKey(window, GLFW_KEY_F1) == GLFW_RELEASE)
+    {
+        cursor_key_pressed = false;
+        static bool disable_cursor = true;
+        disable_cursor = !disable_cursor;
+        if(disable_cursor)
+            glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        else
+            glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
 }
 
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)

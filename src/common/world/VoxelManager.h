@@ -9,6 +9,7 @@
 
 #include "WorldTypes.h"
 #include "common/TypeManager.h"
+#include "common/world/TextureManager.h"
 
 using name_t = std::string_view;
 
@@ -17,6 +18,7 @@ struct VoxelTypeData
 	name_t name;
 	bool solid {true};
 	bool air {air};
+    VoxelTextureNames textures;
 	std::any metadata;
 };
 
