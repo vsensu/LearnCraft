@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 #include <array>
+#include <future>
 
 #include "common/Application.h"
 #include "common/world/World.h"
@@ -34,6 +35,10 @@ private:
     std::shared_ptr<Shader<CreateShaderProgramFromString>> shader {nullptr};
     std::unordered_map<ChunkIndex, ChunkBuffGL*, hash_tuple> chunk_buffs;
     u32 vertex_draw_count_ { 0 };
+    bool world_loaded_ {false};
+    std::unordered_map<ChunkIndex, ChunkMesh*, hash_tuple> chunk_meshes_update_;
+
+    std::future<void> init_world_;
 };
 
 #endif //LEARNCRAFT_GAMEAPPLICATION_H

@@ -145,8 +145,9 @@ struct ChunkMeshUtils
         mesh.indices.push_back(index_start);
     }
 
-    static void CreateChunkMesh(World &world, ChunkMesh &mesh, const Chunk &chunk)
+    static ChunkMesh* CreateChunkMesh(World &world, const Chunk &chunk)
     {
+        ChunkMesh *mesh = new ChunkMesh;
         for (int x = 0; x < WorldConfig::kChunkSizeX; ++x)
         {
             for (int y = 0; y < WorldConfig::kChunkSizeY; ++y)
@@ -162,36 +163,37 @@ struct ChunkMeshUtils
 
                     if (!world.IsVoxelTypeSolidUnbound(chunk.GetChunkIndex(), UnboundVoxelIndex(x, y, z + 1)))
                     {
-                        add_face(mesh, MeshFaces::kFrontFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Front));
+                        add_face(*mesh, MeshFaces::kFrontFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Front));
                     }
 
                     if (!world.IsVoxelTypeSolidUnbound(chunk.GetChunkIndex(), UnboundVoxelIndex(x, y, z - 1)))
                     {
-                        add_face(mesh, MeshFaces::kBackFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Back));
+                        add_face(*mesh, MeshFaces::kBackFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Back));
                     }
 
                     if (!world.IsVoxelTypeSolidUnbound(chunk.GetChunkIndex(), UnboundVoxelIndex(x, y - 1, z)))
                     {
-                        add_face(mesh, MeshFaces::kBottomFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Bottom));
+                        add_face(*mesh, MeshFaces::kBottomFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Bottom));
                     }
 
                     if (!world.IsVoxelTypeSolidUnbound(chunk.GetChunkIndex(), UnboundVoxelIndex(x, y + 1, z)))
                     {
-                        add_face(mesh, MeshFaces::kTopFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Top));
+                        add_face(*mesh, MeshFaces::kTopFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Top));
                     }
 
                     if (!world.IsVoxelTypeSolidUnbound(chunk.GetChunkIndex(), UnboundVoxelIndex(x - 1, y, z)))
                     {
-                        add_face(mesh, MeshFaces::kLeftFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Left));
+                        add_face(*mesh, MeshFaces::kLeftFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Left));
                     }
 
                     if (!world.IsVoxelTypeSolidUnbound(chunk.GetChunkIndex(), UnboundVoxelIndex(x + 1, y, z)))
                     {
-                        add_face(mesh, MeshFaces::kRightFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Right));
+                        add_face(*mesh, MeshFaces::kRightFace, voxel_index, world.GetVoxelTextureLayer(voxel, CubeSide::Right));
                     }
                 }
             }
         }
+        return mesh;
     }
 };
 

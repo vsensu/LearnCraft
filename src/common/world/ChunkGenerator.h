@@ -11,8 +11,9 @@
 
 struct DefaultGenerator
 {
-    void CreateChunkData(const Position &chunkPosition, Chunk &chunk)
+    auto CreateChunkData(const Position &chunkPosition)
     {
+        std::array<voxel_t , WorldConfig::ChunkSize()> voxels;
         const int dirt_base = 60;
         for(int x = 0; x < WorldConfig::kChunkSizeX; ++x)
         {
@@ -39,10 +40,11 @@ struct DefaultGenerator
                     {
                         voxel = static_cast<voxel_t>(CommonVoxel::Stone);
                     }
-                    chunk.SetVoxel(VoxelIndex{x, y, z}, voxel);
+                    voxels[WorldUtils::voxel_index_to_data_index(VoxelIndex{x, y, z})] = voxel;
                 }
             }
         }
+        return voxels;
     }
 };
 

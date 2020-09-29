@@ -39,6 +39,11 @@ public:
 	static bool
 	IsStored(ChunkIndex index);
 
+	void Fill(std::array<voxel_t , WorldConfig::ChunkSize()> &&voxels)
+    {
+	    voxels_ = std::move(voxels);
+    }
+
 private:
 	World& world_;
     ChunkIndex chunk_index_;

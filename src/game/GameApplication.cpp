@@ -140,91 +140,99 @@ GameApplication::Init()
 
 	SetFixedFPS(0); // unlimit
 
-    world_->GetTextureManager().CreateTexture();
-
-	NoiseTool::GenerateHeightCache(-100, -100, 100, 100);
-    camera = &camera_;
     glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window_, mouse_callback);
     glfwSetScrollCallback(window_, scroll_callback);
+    camera = &camera_;
 
+    world_->GetTextureManager().CreateTexture();
     shader = std::make_shared<Shader<CreateShaderProgramFromString>>(vs_code, fs_code);
 
-    int center_x = 0, center_z = 0;
-    int initSize = 10;
-    int chunk_vertical = 16;
+    auto InitWorld = [&]() {
+        NoiseTool::GenerateHeightCache(-50, -50, 50, 50);
+        int center_x = 0, center_z = 0;
+        int initSize = 5;
+        int chunk_vertical = 16;
 
-    DefaultGenerator generator;
-    for(int x = center_x-initSize; x < center_x + initSize; ++x)
-	{
-    	for(int z = center_z-initSize; z < center_z+initSize; ++z)
-		{
-    		for(int y = 0; y < chunk_vertical; ++y)
-    		{
-    			ChunkIndex chunk_index {x, y, z};
-				auto *chunk = new Chunk(*world_, chunk_index);
-                generator.CreateChunkData(WorldUtils::ChunkIndexToPosition(chunk_index), *chunk);
-                world_->AddChunk(chunk_index, chunk);
-    		}
-		}
-	}
+        DefaultGenerator generator;
+        for (int x = center_x - initSize; x < center_x + initSize; ++x) {
+            for (int z = center_z - initSize; z < center_z + initSize; ++z) {
+                for (int y = 0; y < chunk_vertical; ++y) {
+                    ChunkIndex chunk_index{x, y, z};
+                    auto *chunk = new Chunk(*world_, chunk_index);
+                    chunk->Fill(std::move(generator.CreateChunkData(WorldUtils::ChunkIndexToPosition(chunk_index))));
+                    world_->AddChunk(chunk_index, chunk);
+                }
+            }
+        }
+        for (int x = center_x - initSize; x < center_x + initSize; ++x) {
+            for (int z = center_z - initSize; z < center_z + initSize; ++z) {
+                for (int y = 0; y < chunk_vertical; ++y) {
+                    ChunkIndex chunk_index{x, y, z};
+                    auto *chunk = world_->GetChunkData(chunk_index);
+                    auto *mesh = ChunkMeshUtils::CreateChunkMesh(*world_, *chunk);
+                    vertex_count += mesh->vertices.size();
+                    index_count += mesh->indices.size();
+                    chunk_meshes_update_[chunk_index] = mesh;
+                }
+            }
+        }
 
-	for(int x = center_x-initSize; x < center_x + initSize; ++x)
-	{
-		for(int z = center_z-initSize; z < center_z+initSize; ++z)
-		{
-			for(int y = 0; y < chunk_vertical; ++y)
-			{
-				ChunkIndex chunk_index {x, y, z};
-				auto *mesh = new ChunkMesh;
-				auto *chunk = world_->GetChunkData(chunk_index);
-				ChunkMeshUtils::CreateChunkMesh(*world_, *mesh, *chunk);
-				vertex_count += mesh->vertices.size();
-				index_count += mesh->indices.size();
-				auto *chunk_buff = new ChunkBuffGL;
-				chunk_buff->CreateBuff(mesh->vertices, mesh->indices);
-				chunk_buffs[chunk_index] = chunk_buff;
-			}
-		}
-	}
+        auto height = NoiseTool::GenerateHeightWithCache(0, 0);
+        camera_.SetPos(glm::vec3{0, height + 5, 0});
+        world_loaded_ = true;
+    };
 
-	auto height = NoiseTool::GenerateHeightWithCache(0, 0);
-    camera_.SetPos(glm::vec3{0, height + 5, 0});
-
+    init_world_ = std::async(std::launch::async, InitWorld);
 }
 
 void GameApplication::Update()
 {
 	camera_.Update(delta_time_);
+
+	if(world_loaded_)
+	{
+        for(const auto &chunk_mesh_update : chunk_meshes_update_)
+        {
+            auto *chunk_buff = new ChunkBuffGL;
+            chunk_buff->CreateBuff(chunk_mesh_update.second->vertices, chunk_mesh_update.second->indices);
+            chunk_buffs[chunk_mesh_update.first] = chunk_buff;
+        }
+        chunk_meshes_update_.clear();
+	}
 }
 
 
 void GameApplication::RenderScene()
 {
     glClear(GL_DEPTH_BUFFER_BIT);
-    shader->Use();
-    // 绑定纹理
-    world_->GetTextureManager().Bind();
 
-    shader->LoadUniform("projView", camera_.Perspective(800.f/600) * camera_.View());
-    shader->LoadUniform("model", glm::mat4(1.f));
-    shader->LoadUniform("texUnit", 0.25f);
+    if(world_loaded_)
+    {
+        shader->Use();
+        // 绑定纹理
+        world_->GetTextureManager().Bind();
 
-	const ViewFrustum& frustum = camera_.GetFrustum();
-	static float sightRange = 80.0f;
-	vertex_draw_count_ = 0;
-    for(const auto &chunk_buff : chunk_buffs)
-	{
-    	if(WorldUtils::ChunkIsInSightRange(camera_.GetPos(), chunk_buff.first, sightRange))
-		{
-			if(WorldUtils::chunkIsInFrustum(frustum, chunk_buff.first))
-			{
-				shader->LoadUniform("chunkPosition", WorldUtils::ChunkIndexToPosition(chunk_buff.first));
-				chunk_buff.second->draw();
-				vertex_draw_count_ += chunk_buff.second->index_count;
-			}
-		}
-	}
+        shader->LoadUniform("projView", camera_.Perspective(800.f/600) * camera_.View());
+        shader->LoadUniform("model", glm::mat4(1.f));
+        shader->LoadUniform("texUnit", 0.25f);
+
+        const ViewFrustum& frustum = camera_.GetFrustum();
+        static float sightRange = 80.0f;
+        vertex_draw_count_ = 0;
+        for(const auto &chunk_buff : chunk_buffs)
+        {
+            if(WorldUtils::ChunkIsInSightRange(camera_.GetPos(), chunk_buff.first, sightRange))
+            {
+                if(WorldUtils::chunkIsInFrustum(frustum, chunk_buff.first))
+                {
+                    shader->LoadUniform("chunkPosition", WorldUtils::ChunkIndexToPosition(chunk_buff.first));
+                    chunk_buff.second->draw();
+                    vertex_draw_count_ += chunk_buff.second->index_count;
+                }
+            }
+        }
+    }
 }
 
 void GameApplication::RenderUI()
@@ -232,6 +240,10 @@ void GameApplication::RenderUI()
     ImGui::Begin("Debug");
     ImGui::Text("fps: %d", static_cast<int>(fps_ + 0.5));
     ImGui::Text("Press F1 to toggle cursor");
+    if(!world_loaded_)
+    {
+        ImGui::Text("Loading ...");
+    }
     static bool show = false;
     if(ImGui::Button("Show voxel info"))
 	{
@@ -291,10 +303,16 @@ void GameApplication::HandleKeyboard(GLFWwindow *window)
 
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
+    if(nullptr == camera)
+        return;
+
     camera->MouseCallback(window, xpos, ypos);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+    if(nullptr == camera)
+        return;
+
     camera->Zoom(yoffset);
 }
