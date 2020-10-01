@@ -11,6 +11,7 @@
 #include <cassert>
 
 #include <glad/glad.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "gl_errors.h"
 

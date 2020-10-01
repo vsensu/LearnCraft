@@ -58,7 +58,7 @@ public:
         return name_tex_map_[name];
     }
 
-    void CreateTexture()
+    GLuint CreateTexture()
     {
         // 创建纹理对象
         glGenTextures(1, &texture);
@@ -83,11 +83,7 @@ public:
         }
         glTexImage2D(GL_TEXTURE_2D, 0 /*mipmap*/, GL_RGB, 16, 16*textures.size(), 0/*legacy*/, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
         glGenerateMipmap(GL_TEXTURE_2D);
-    }
-
-    void Bind()
-    {
-        glBindTexture(GL_TEXTURE_2D, texture);
+        return texture;
     }
 
 protected:

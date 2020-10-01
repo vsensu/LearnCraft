@@ -29,19 +29,18 @@ WorldUtils::VoxelIndexToGlobalLocation(const VoxelIndex& voxelIndex)
 }
 
 bool
-WorldUtils::ChunkIsInSightRange(const Position& cameraPos, const ChunkIndex& chunkIndex, float sightRange)
+WorldUtils::IsPointInSightRange(const Position& cameraPos, const Position &pos, float sightRange)
 {
-	auto [chunk_x, chunk_y, chunk_z] = chunkIndex;
-	return std::pow(cameraPos.x - chunk_x * WorldConfig::kChunkSizeX, 2) +
-		std::pow(cameraPos.y - chunk_y * WorldConfig::kChunkSizeY, 2) +
-		std::pow(cameraPos.z - chunk_z * WorldConfig::kChunkSizeZ, 2) <=
+	return std::pow(cameraPos.x - pos.x, 2) +
+		std::pow(cameraPos.y - pos.y, 2) +
+		std::pow(cameraPos.z - pos.z, 2) <=
 		std::pow(sightRange, 2);
 }
 
-bool WorldUtils::chunkIsInFrustum(const ViewFrustum &frustum, const ChunkIndex &chunkIndex) noexcept
+bool WorldUtils::chunkIsInFrustum(const ViewFrustum &frustum, const Position &chunkPosition) noexcept
 {
 //	box *= CHUNK_SIZE;
-	auto box = WorldUtils::ChunkIndexToPosition(chunkIndex);
+	auto box = chunkPosition;
 
 	auto getVP = [&](const glm::vec3& normal) {
 		auto res = box;

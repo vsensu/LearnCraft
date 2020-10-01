@@ -24,7 +24,7 @@ add_executable(LearnCraft src/main.cpp deps/glad/src/glad.c src/platforms/imgui_
         src/common/world/TextureManager.h
         src/common/world/World.cpp src/common/world/Chunk.cpp src/common/NoiseTool.cpp src/common/Perlin_Noise/ppm.cpp
         src/common/Perlin_Noise/PerlinNoise.cpp src/common/world/VoxelManager.h
-        src/common/Application.cpp src/game/GameApplication.cpp)
+        src/common/Application.cpp src/game/GameApplication.cpp src/game/gameplay.h)
 target_link_libraries(LearnCraft ${CONAN_LIBS})
 
 

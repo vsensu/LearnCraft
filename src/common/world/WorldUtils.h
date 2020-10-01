@@ -45,8 +45,8 @@ public:
 		return static_cast<voxel_t>(CommonVoxel::Air);
 	}
 
-	static bool ChunkIsInSightRange(const Position &cameraPos, const ChunkIndex &chunkIndex, float sightRange);
-	static bool chunkIsInFrustum(const ViewFrustum &frustum, const ChunkIndex &chunkIndex) noexcept;
+	static bool IsPointInSightRange(const Position &cameraPos, const Position &pos, float sightRange);
+	static bool chunkIsInFrustum(const ViewFrustum &frustum, const Position &chunkPosition) noexcept;
 };
 
 #endif //LEARNCRAFT_SRC_COMMON_WORLD_WORLDUTILS_H

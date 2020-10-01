@@ -9,12 +9,14 @@
 #include <vector>
 #include <array>
 #include <future>
+#include <entt/entt.hpp>
 
 #include "common/Application.h"
 #include "common/world/World.h"
 #include "common/Camera.h"
 #include "common/Shader.hpp"
 #include "common/world/ChunkRender.h"
+#include "gameplay.h"
 
 class GameApplication : public Application
 {
@@ -32,13 +34,13 @@ private:
     std::vector<ChunkMesh*> meshes;
     std::size_t vertex_count;
     std::size_t index_count;
-    std::shared_ptr<Shader<CreateShaderProgramFromString>> shader {nullptr};
     std::unordered_map<ChunkIndex, ChunkBuffGL*, hash_tuple> chunk_buffs;
-    u32 vertex_draw_count_ { 0 };
     bool world_loaded_ {false};
     std::unordered_map<ChunkIndex, ChunkMesh*, hash_tuple> chunk_meshes_update_;
 
     std::future<void> init_world_;
+    ChunkRenderSystem chunkRenderManager;
+    entt::registry registry;
 };
 
 #endif //LEARNCRAFT_GAMEAPPLICATION_H
