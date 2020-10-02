@@ -17,26 +17,28 @@
 
 /*
  * define ENTT_ID_TYPE std::uint32_t
+ * ===================================
+ * Config(Type) is comfirmed instance.
+ * ===================================
  *
- * Chunk Data Table
+ * ============================
+ * tables
+ * ============================
+ *
+ * Entity Table
  * ------------------------------------------------
- * *chunk_id | (chunk_index)   |std::array<vexel_id>
+ * id   |   component_inst_ids(vector)
  * ------------------------------------------------
  *
- * voxel inst data Table
- * ----------------------
- * *voxel_id | type_id
- * -----------------------
- *
- * vexel type data table
- * -----------------------
- * *type_id | opaque |
- *
- *
- * Dirt inst data table
- * -------------------------
- * voxel_id | age | max age
- *
+ * Component Table
+ * --------------------------------------------------------------
+ * component_inst_id    |   class_reflection  |   serialized_data(str)
+ * --------------------------------------------------------------
+ * default_1
+ * default_2
+ * ...
+ * inst_1
+ * inst_2
  *
  * ===========================
  * Generated Data
