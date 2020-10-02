@@ -59,7 +59,7 @@ GameApplication::Init()
                 for (int y = 0; y < chunk_vertical; ++y) {
                     ChunkIndex chunk_index{x, y, z};
                     auto *chunk = new Chunk(*world_, chunk_index);
-                    chunk->Fill(std::move(generator.CreateChunkData(WorldUtils::ChunkIndexToPosition(chunk_index))));
+                    chunk->Fill(std::move(generator(WorldUtils::ChunkIndexToPosition(chunk_index))));
                     world_->AddChunk(chunk_index, chunk);
                 }
             }
@@ -88,6 +88,8 @@ GameApplication::Init()
 void GameApplication::Update()
 {
 	camera_.Update(delta_time_);
+
+    ChunkInitSystem::Tick(generator, registry);
 
 	if(world_loaded_)
 	{

@@ -42,6 +42,7 @@ private:
     std::future<void> init_world_;
     ChunkRenderSystem chunkRenderManager;
     entt::registry registry;
+    DefaultGenerator generator;
 };
 
 #endif //LEARNCRAFT_GAMEAPPLICATION_H

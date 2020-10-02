@@ -11,7 +11,7 @@
 
 struct DefaultGenerator
 {
-    auto CreateChunkData(const Position &chunkPosition)
+    auto operator()(const Position &chunkPosition)
     {
         std::array<voxel_t , WorldConfig::ChunkSize()> voxels;
         const int dirt_base = 60;
