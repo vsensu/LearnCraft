@@ -10,6 +10,7 @@
 #include <array>
 #include <future>
 #include <entt/entt.hpp>
+#include <game/sys/chunk_render.h>
 
 #include "common/Application.h"
 #include "common/world/World.h"
