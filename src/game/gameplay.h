@@ -15,6 +15,36 @@
 
 #include "common/Shader.hpp"
 
+/*
+ * define ENTT_ID_TYPE std::uint32_t
+ *
+ * Chunk Data Table
+ * ------------------------------------------------
+ * *chunk_id | (chunk_index)   |std::array<vexel_id>
+ * ------------------------------------------------
+ *
+ * voxel inst data Table
+ * ----------------------
+ * *voxel_id | type_id
+ * -----------------------
+ *
+ * vexel type data table
+ * -----------------------
+ * *type_id | opaque |
+ *
+ *
+ * Dirt inst data table
+ * -------------------------
+ * voxel_id | age | max age
+ *
+ *
+ * ===========================
+ * Generated Data
+ * ===========================
+ * Chunk Mesh
+ * Chunk to Create
+ * */
+
 struct ChunkInitComponent
 {
     ChunkIndex chunk_index;

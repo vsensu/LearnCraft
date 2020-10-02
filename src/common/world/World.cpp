@@ -20,25 +20,25 @@ World::World()
 
 	CustomData a {10};
 	if(!voxel_manager_.RegisterType(static_cast<voxel_t>(CommonVoxel::Air),
-                                 VoxelTypeData {"Air", false, true,
+                                 VoxelTypeData {"Air", false,
                                                 {.front = "Dirt", .back = "Dirt", .left = "Dirt", .right = "Dirt", .top = "Dirt", .bottom = "Dirt"},
                                                 a }))
 	{
 	}
     if (!voxel_manager_.RegisterType(static_cast<voxel_t>(CommonVoxel::Dirt),
-                                     VoxelTypeData{"Dirt", true, false,
+                                     VoxelTypeData{"Dirt", true,
                                                    {.front = "Dirt", .back = "Dirt", .left = "Dirt", .right = "Dirt", .top = "Dirt", .bottom = "Dirt"},
                                      }))
 	{
 	}
     if (!voxel_manager_.RegisterType(static_cast<voxel_t>(CommonVoxel::Grass),
-                                     VoxelTypeData{"Grass", true, false,
+                                     VoxelTypeData{"Grass", true,
                                                    {.front = "Grass", .back = "Grass", .left = "Grass", .right = "Grass", .top = "Grass", .bottom = "Grass"},
                                      }))
 	{
 	}
     if (!voxel_manager_.RegisterType(static_cast<voxel_t>(CommonVoxel::Stone),
-                                     VoxelTypeData{"Stone", true, false,
+                                     VoxelTypeData{"Stone", true,
                                                    {.front = "Stone", .back = "Stone", .left = "Stone", .right = "Stone", .top = "Stone", .bottom = "Stone"},
                                      }))
 	{

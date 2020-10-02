@@ -16,8 +16,7 @@ using name_t = std::string_view;
 struct VoxelTypeData
 {
 	name_t name;
-	bool solid {true};
-	bool air {air};
+	bool opaque {true};
     VoxelTextureNames textures;
 	std::any metadata;
 };

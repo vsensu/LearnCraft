@@ -13,7 +13,7 @@
 
 using BlockType = std::string;
 //using ChunkIndex = glm::i32vec3;
-using ChunkIndex = std::tuple<i32, i32, i32>;
+using ChunkIndex = std::tuple<i16, i16, i16>;
 using VoxelIndex = glm::u8vec3;
 using UnboundVoxelIndex = glm::i8vec3;
 using Position = glm::vec3;

@@ -158,7 +158,7 @@ struct ChunkMeshUtils
 
                     auto voxel = chunk.GetVoxel(voxel_index);
 
-                    if(world.IsVoxelTypeAir(chunk.GetChunkIndex(), voxel_index))
+                    if(voxel == static_cast<voxel_t>(CommonVoxel::Air))
                         continue;
 
                     if (!world.IsVoxelTypeSolidUnbound(chunk.GetChunkIndex(), UnboundVoxelIndex(x, y, z + 1)))

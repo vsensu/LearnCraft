@@ -32,29 +32,19 @@ public:
 	voxel_t
 	GetVoxel(const ChunkIndex& chunkIndex, const VoxelIndex &voxelIndex) const;
 
-	inline bool IsVoxelTypeAir(const ChunkIndex& chunkIndex, const VoxelIndex &voxelIndex)
+	inline bool IsVoxelTypeOpaque(const ChunkIndex& chunkIndex, const VoxelIndex &voxelIndex)
 	{
-		return voxel_manager_.GetTypeData(GetVoxel(chunkIndex, voxelIndex)).air;
+		return voxel_manager_.GetTypeData(GetVoxel(chunkIndex, voxelIndex)).opaque;
 	}
 
-	inline bool IsVoxelTypeAir(const Position &pos)
+	inline bool IsVoxelTypeOpaque(const Position &pos)
 	{
-		return voxel_manager_.GetTypeData(GetVoxel(pos)).air;
-	}
-
-	inline bool IsVoxelTypeSolid(const ChunkIndex& chunkIndex, const VoxelIndex &voxelIndex)
-	{
-		return voxel_manager_.GetTypeData(GetVoxel(chunkIndex, voxelIndex)).solid;
-	}
-
-	inline bool IsVoxelTypeSolid(const Position &pos)
-	{
-		return voxel_manager_.GetTypeData(GetVoxel(pos)).solid;
+		return voxel_manager_.GetTypeData(GetVoxel(pos)).opaque;
 	}
 
 	inline bool IsVoxelTypeSolidUnbound(const ChunkIndex& chunkIndex, const UnboundVoxelIndex& unboundIndex)
 	{
-		return voxel_manager_.GetTypeData(GetVoxelViaUnboundIndex(chunkIndex, unboundIndex)).solid;
+		return voxel_manager_.GetTypeData(GetVoxelViaUnboundIndex(chunkIndex, unboundIndex)).opaque;
 	}
 
 	voxel_t GetVoxelViaUnboundIndex(const ChunkIndex& chunkIndex, const UnboundVoxelIndex& unboundIndex);
