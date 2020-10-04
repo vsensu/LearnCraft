@@ -47,6 +47,14 @@ public:
 
 	static bool IsPointInSightRange(const Position &cameraPos, const Position &pos, float sightRange);
 	static bool chunkIsInFrustum(const ViewFrustum &frustum, const Position &chunkPosition) noexcept;
+
+	static inline bool IsBorder(const VoxelIndex &index)
+    {
+	    if(index.x == 0 || index.x + 1 == WorldConfig::kChunkSizeX || index.y == 0 || index.y + 1 == WorldConfig::kChunkSizeY || index.z == 0 || index.z + 1 == WorldConfig::kChunkSizeZ)
+	        return true;
+
+	    return false;
+    }
 };
 
 #endif //LEARNCRAFT_SRC_COMMON_WORLD_WORLDUTILS_H
