@@ -19,6 +19,7 @@
 #include "common/NoiseTool.h"
 #include "common/world/ChunkGenerator.h"
 #include "common/world/ChunkRender.h"
+#include "gameplay.h"
 
 namespace
 {
@@ -48,31 +49,18 @@ GameApplication::Init()
     chunkRenderManager.init(texture);
 
     auto InitWorld = [&]() {
+        InitGameCore(registry);
         NoiseTool::GenerateHeightCache(-50, -50, 50, 50);
         int center_x = 0, center_z = 0;
         int initSize = 5;
         int chunk_vertical = 16;
 
-        DefaultGenerator generator;
         for (int x = center_x - initSize; x < center_x + initSize; ++x) {
             for (int z = center_z - initSize; z < center_z + initSize; ++z) {
                 for (int y = 0; y < chunk_vertical; ++y) {
                     ChunkIndex chunk_index{x, y, z};
-                    auto *chunk = new Chunk(*world_, chunk_index);
-                    chunk->Fill(std::move(generator(WorldUtils::ChunkIndexToPosition(chunk_index))));
-                    world_->AddChunk(chunk_index, chunk);
-                }
-            }
-        }
-        for (int x = center_x - initSize; x < center_x + initSize; ++x) {
-            for (int z = center_z - initSize; z < center_z + initSize; ++z) {
-                for (int y = 0; y < chunk_vertical; ++y) {
-                    ChunkIndex chunk_index{x, y, z};
-                    auto *chunk = world_->GetChunkData(chunk_index);
-                    auto *mesh = ChunkMeshUtils::CreateChunkMesh(*world_, *chunk);
-                    vertex_count += mesh->vertices.size();
-                    index_count += mesh->indices.size();
-                    chunk_meshes_update_[chunk_index] = mesh;
+                    auto entity = registry.create();
+                    registry.emplace<ChunkInitComponent>(entity, ChunkInitComponent{.chunk_index = chunk_index});
                 }
             }
         }
@@ -89,22 +77,9 @@ void GameApplication::Update()
 {
 	camera_.Update(delta_time_);
 
+    VoxelEntityGenerator generator;
     ChunkInitSystem::Tick(generator, registry);
-
-	if(world_loaded_)
-	{
-        for(const auto &chunk_mesh_update : chunk_meshes_update_)
-        {
-            auto *chunk_buff = new ChunkBuffGL;
-            chunk_buff->CreateBuff(chunk_mesh_update.second->vertices, chunk_mesh_update.second->indices);
-            chunk_buffs[chunk_mesh_update.first] = chunk_buff;
-
-            auto entity = registry.create();
-            registry.emplace<PositionComponent>(entity, PositionComponent{ WorldUtils::ChunkIndexToPosition(chunk_mesh_update.first) });
-            registry.emplace<ChunkRenderComponent>(entity, ChunkRenderComponent{.vao = chunk_buff->vao, .index_count = chunk_buff->index_count});
-        }
-        chunk_meshes_update_.clear();
-	}
+    ChunkMeshInitSystem::Tick(registry);
 }
 
 
@@ -114,7 +89,7 @@ void GameApplication::RenderScene()
 
     if(world_loaded_)
     {
-        chunkRenderManager.update(camera_, registry);
+        chunkRenderManager.Tick(camera_, registry);
     }
 }
 

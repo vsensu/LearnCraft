@@ -17,7 +17,7 @@
 #include "common/Camera.h"
 #include "common/Shader.hpp"
 #include "common/world/ChunkRender.h"
-#include "gameplay.h"
+//#include "gameplay.h"
 
 class GameApplication : public Application
 {

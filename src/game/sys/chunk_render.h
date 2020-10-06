@@ -10,6 +10,7 @@
 #include <common/world/ChunkGenerator.h>
 #include <game/comp/position.h>
 #include <game/comp/render.h>
+#include <game/comp/chunk_index.h>
 
 #include "common/world/WorldUtils.h"
 #include "common/world/WorldTypes.h"
@@ -126,7 +127,7 @@ struct ChunkRenderSystem
         texture = tex;
     }
 
-    void update(Camera &camera, entt::registry &registry)
+    void Tick(Camera &camera, entt::registry &registry)
     {
         shader->Use();
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -139,13 +140,13 @@ struct ChunkRenderSystem
         static float sightRange = 80.0f;
         vertex_draw_count = 0;
 
-        registry.view<PositionComponent, ChunkRenderComponent>().each([&](const auto &pos, auto &render) {
-
-            if(WorldUtils::IsPointInSightRange(camera.GetPos(), pos.val, sightRange))
+        registry.view<ChunkIndexComponent, ChunkRenderComponent>().each([&](const auto &chunk_index, auto &render) {
+            auto pos = WorldUtils::ChunkIndexToPosition(chunk_index.val);
+            if(WorldUtils::IsPointInSightRange(camera.GetPos(), pos, sightRange))
             {
-                if(WorldUtils::chunkIsInFrustum(frustum, pos.val))
+                if(WorldUtils::chunkIsInFrustum(frustum, pos))
                 {
-                    shader->LoadUniform("chunkPosition", pos.val);
+                    shader->LoadUniform("chunkPosition", pos);
                     glBindVertexArray(render.vao);
                     glCheck(glDrawElements(GL_TRIANGLES, render.index_count, GL_UNSIGNED_INT, nullptr));
                     vertex_draw_count += render.index_count;
