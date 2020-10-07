@@ -117,17 +117,17 @@ void main() {
 
 struct ChunkRenderSystem
 {
-    std::shared_ptr<Shader<CreateShaderProgramFromString>> shader {nullptr};
-    GLuint texture;
-    u32 vertex_draw_count { 0 };
+    inline static std::shared_ptr<Shader<CreateShaderProgramFromString>> shader {nullptr};
+    inline static GLuint texture;
+    inline static u32 vertex_draw_count { 0 };
 
-    void init(GLuint tex)
+    static void init(GLuint tex)
     {
         shader = std::make_shared<Shader<CreateShaderProgramFromString>>(vs_code, fs_code);
         texture = tex;
     }
 
-    void Tick(Camera &camera, entt::registry &registry)
+    static void Tick(Camera &camera, entt::registry &registry)
     {
         shader->Use();
         glBindTexture(GL_TEXTURE_2D, texture);

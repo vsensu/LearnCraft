@@ -45,11 +45,9 @@ GameApplication::Init()
     glfwSetScrollCallback(window_, scroll_callback);
     camera = &camera_;
 
-    GLuint texture = world_->GetTextureManager().CreateTexture();
-    chunkRenderManager.init(texture);
+    InitGameCore(registry);
 
     auto InitWorld = [&]() {
-        InitGameCore(registry);
         NoiseTool::GenerateHeightCache(-50, -50, 50, 50);
         int center_x = 0, center_z = 0;
         int initSize = 5;
@@ -90,7 +88,7 @@ void GameApplication::RenderScene()
 
     if(world_loaded_)
     {
-        chunkRenderManager.Tick(camera_, registry);
+        ChunkRenderSystem::Tick(camera_, registry);
     }
 }
 
@@ -129,7 +127,7 @@ void GameApplication::RenderUI()
     ImGui::Text("Camera pos:%f,%f,%f", pos.x, pos.y, pos.z);
     auto forward = camera_.GetForward();
     ImGui::Text("Camera forward:%f,%f,%f", forward.x, forward.y, forward.z);
-    ImGui::Text("draw vertex:%lu", chunkRenderManager.vertex_draw_count);
+    ImGui::Text("draw vertex:%lu", ChunkRenderSystem::vertex_draw_count);
     ImGui::End();
 }
 

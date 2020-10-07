@@ -187,8 +187,15 @@ std::tuple<ChunkIndex, VoxelIndex> StandardizeVoxelIndex(const ChunkIndex& chunk
 
 void InitGameCore(entt::registry &registry)
 {
+    texture_manager.RegisterTexture("Empty", "Textures/dirt.jpg");
+    texture_manager.RegisterTexture("Dirt", "Textures/dirt.jpg");
+    texture_manager.RegisterTexture("Grass.Top", "Textures/grass.jpg");
+    texture_manager.RegisterTexture("Stone", "Textures/stone.jpg");
+
+    GLuint texture = texture_manager.CreateTexture();
+    ChunkRenderSystem::init(texture);
+
     auto empty = registry.create(CoreEntity::Block_Empty);
-    std::cout << "create entity " << static_cast<int>(empty) << "\n";
     auto dirt = registry.create(CoreEntity::Block_Dirt);
     auto grass = registry.create(CoreEntity::Block_Grass);
     auto stone = registry.create(CoreEntity::Block_Stone);
@@ -209,7 +216,7 @@ void InitGameCore(entt::registry &registry)
             .left = 0, .right = 0,
             .top = 0, .bottom = 0,
     });
-    auto dirt_layer = texture_manager.GetVoxelTextureLayer("dirt");
+    auto dirt_layer = texture_manager.GetVoxelTextureLayer("Dirt");
     registry.emplace<RuntimeVoxelTextureLayerComponent>(dirt, VoxelTextureLayers{
             .front = dirt_layer, .back = dirt_layer,
             .left = dirt_layer, .right = dirt_layer,
@@ -218,10 +225,10 @@ void InitGameCore(entt::registry &registry)
     registry.emplace<RuntimeVoxelTextureLayerComponent>(grass, VoxelTextureLayers{
             .front = dirt_layer, .back = dirt_layer,
             .left = dirt_layer, .right = dirt_layer,
-            .top = texture_manager.GetVoxelTextureLayer("grass_top"),
+            .top = texture_manager.GetVoxelTextureLayer("Grass.Top"),
             .bottom = dirt_layer,
     });
-    auto stone_layer = texture_manager.GetVoxelTextureLayer("stone");
+    auto stone_layer = texture_manager.GetVoxelTextureLayer("Stone");
     registry.emplace<RuntimeVoxelTextureLayerComponent>(stone, VoxelTextureLayers{
             .front = stone_layer, .back = stone_layer,
             .left = stone_layer, .right = stone_layer,

@@ -40,7 +40,6 @@ private:
     std::unordered_map<ChunkIndex, ChunkMesh*, hash_tuple> chunk_meshes_update_;
 
     std::future<void> init_world_;
-    ChunkRenderSystem chunkRenderManager;
     entt::registry registry;
     DefaultGenerator generator;
 };
