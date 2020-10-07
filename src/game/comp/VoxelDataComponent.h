@@ -2,8 +2,8 @@
 // Created by reili on 2020/10/7.
 //
 
-#ifndef LEARNCRAFT_VOXELDATA_H
-#define LEARNCRAFT_VOXELDATA_H
+#ifndef LEARNCRAFT_VOXELDATACOMPONENT_H
+#define LEARNCRAFT_VOXELDATACOMPONENT_H
 
 #include <common/world/WorldTypes.h>
 
@@ -36,4 +36,4 @@ bool has_trait_opaque(voxel_traits_t traits)
     return traits & (VoxelTrait::Opaque);
 }
 
-#endif //LEARNCRAFT_VOXELDATA_H
+#endif //LEARNCRAFT_VOXELDATACOMPONENT_H

@@ -2,8 +2,8 @@
 // Created by reili on 2020/10/7.
 //
 
-#ifndef LEARNCRAFT_CHUNKVOXELENTITIES_H
-#define LEARNCRAFT_CHUNKVOXELENTITIES_H
+#ifndef LEARNCRAFT_CHUNKVOXELENTITIESCOMPONENT_H
+#define LEARNCRAFT_CHUNKVOXELENTITIESCOMPONENT_H
 
 #include <array>
 
@@ -15,4 +15,4 @@ struct ChunkVoxelEntitiesComponent
     std::array<entt::entity , WorldConfig::ChunkSize()> voxels;
 };
 
-#endif //LEARNCRAFT_CHUNKVOXELENTITIES_H
+#endif //LEARNCRAFT_CHUNKVOXELENTITIESCOMPONENT_H

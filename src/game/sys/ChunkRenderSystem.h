@@ -2,15 +2,15 @@
 // Created by reili on 2020/10/1.
 //
 
-#ifndef LEARNCRAFT_CHUNK_RENDER_H
-#define LEARNCRAFT_CHUNK_RENDER_H
+#ifndef LEARNCRAFT_CHUNKRENDERSYSTEM_H
+#define LEARNCRAFT_CHUNKRENDERSYSTEM_H
 
 #include <entt/entt.hpp>
 #include <glad/glad.h>
 #include <common/world/ChunkGenerator.h>
-#include <game/comp/position.h>
-#include <game/comp/render.h>
-#include <game/comp/chunk_index.h>
+#include <game/comp/PositionComponent.h>
+#include <game/comp/ChunkRenderComponent.h>
+#include <game/comp/ChunkIndexComponent.h>
 
 #include "common/world/WorldUtils.h"
 #include "common/world/WorldTypes.h"
@@ -158,4 +158,4 @@ struct ChunkRenderSystem
     }
 };
 
-#endif //LEARNCRAFT_CHUNK_RENDER_H
+#endif //LEARNCRAFT_CHUNKRENDERSYSTEM_H

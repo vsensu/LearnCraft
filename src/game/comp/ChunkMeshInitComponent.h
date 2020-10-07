@@ -1,0 +1,12 @@
+//
+// Created by reili on 2020/10/7.
+//
+
+#ifndef LEARNCRAFT_CHUNKMESHINITCOMPONENT_H
+#define LEARNCRAFT_CHUNKMESHINITCOMPONENT_H
+
+struct ChunkMeshInitComponent
+{
+};
+
+#endif //LEARNCRAFT_CHUNKMESHINITCOMPONENT_H

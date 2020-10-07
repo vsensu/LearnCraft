@@ -4,9 +4,9 @@
 
 #include "gameplay.h"
 
-#include <game/sys/chunk_render.h>
-#include <game/comp/VoxelData.h>
-#include <game/comp/RuntimeVoxelTextureLayer.h>
+#include <game/sys/ChunkRenderSystem.h>
+#include <game/comp/VoxelDataComponent.h>
+#include <game/comp/RuntimeVoxelTextureLayerComponent.h>
 #include <game/sys/ChunkInitSystem.h>
 #include <game/sys/ChunkMeshInitSystem.h>
 #include <imgui.h>

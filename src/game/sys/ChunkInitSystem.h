@@ -10,11 +10,11 @@
 #include <common/world/WorldTypes.h>
 #include <entt/entt.hpp>
 #include <common/world/WorldConfig.h>
-#include <game/comp/chunk_index.h>
-#include <game/comp/ChunkVoxelEntities.h>
+#include <game/comp/ChunkIndexComponent.h>
+#include <game/comp/ChunkVoxelEntitiesComponent.h>
 #include <common/world/WorldUtils.h>
-#include <game/comp/ChunkInit.h>
-#include <game/comp/ChunkMeshInit.h>
+#include <game/comp/ChunkInitComponent.h>
+#include <game/comp/ChunkMeshInitComponent.h>
 
 
 struct ChunkInitSystem{

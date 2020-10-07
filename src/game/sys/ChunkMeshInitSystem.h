@@ -6,14 +6,14 @@
 #define LEARNCRAFT_CHUNKMESHINITSYSTEM_H
 
 #include <entt/entt.hpp>
-#include <game/comp/chunk_index.h>
-#include <game/comp/VoxelData.h>
-#include <game/comp/ChunkVoxelEntities.h>
-#include <game/comp/ChunkMeshInit.h>
-#include <game/comp/RuntimeVoxelTextureLayer.h>
+#include <game/comp/ChunkIndexComponent.h>
+#include <game/comp/VoxelDataComponent.h>
+#include <game/comp/ChunkVoxelEntitiesComponent.h>
+#include <game/comp/ChunkMeshInitComponent.h>
+#include <game/comp/RuntimeVoxelTextureLayerComponent.h>
 #include <common/world/WorldUtils.h>
 #include <common/world/ChunkRender.h>
-#include <game/comp/render.h>
+#include <game/comp/ChunkRenderComponent.h>
 
 // create chunk vertices and indices
 struct ChunkMeshInitSystem {
