@@ -23,6 +23,9 @@ struct Game
     std::unordered_map<ChunkIndex, entt::entity, hash_tuple> chunk_entity_map;
     std::array<tex_t, (1u << 16)> texture_layers;
     std::unordered_map<std::string, entt::entity> named_entities;
+    entt::entity player;
+
+    Position player_last_pos;
 };
 
 struct VoxelTexturePathComponent

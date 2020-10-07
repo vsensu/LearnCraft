@@ -16,14 +16,15 @@
 
 void Game::Init()
 {
+    // load textures
     texture_manager.RegisterTexture("Empty", "Textures/dirt.jpg");
     texture_manager.RegisterTexture("Dirt", "Textures/dirt.jpg");
     texture_manager.RegisterTexture("Grass.Top", "Textures/grass.jpg");
     texture_manager.RegisterTexture("Stone", "Textures/stone.jpg");
-
     GLuint texture = texture_manager.CreateTexture();
     ChunkRenderSystem::init(texture);
 
+    // create core entities
     auto empty = registry.create(CoreEntity::Block_Empty);
     auto dirt = registry.create(CoreEntity::Block_Dirt);
     auto grass = registry.create(CoreEntity::Block_Grass);
@@ -34,6 +35,7 @@ void Game::Init()
     named_entities[NamedEntities::Block_Grass] = grass;
     named_entities[NamedEntities::Block_Stone] = stone;
 
+    // set voxel traits
     registry.emplace<VoxelDataComponent>(empty, "Empty", static_cast<voxel_traits_t>(VoxelTrait::Empty));
     registry.emplace<VoxelDataComponent>(dirt, "Dirt", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
     registry.emplace<VoxelDataComponent>(grass, "Grass", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
@@ -64,6 +66,7 @@ void Game::Init()
             .top = stone_layer, .bottom = stone_layer,
     });
 
+    // generate terrain
     NoiseTool::GenerateHeightCache(-50, -50, 50, 50);
     int center_x = 0, center_z = 0;
     int initSize = 5;
@@ -79,7 +82,12 @@ void Game::Init()
         }
     }
 
+    // get player spawn location
     auto height = NoiseTool::GenerateHeightWithCache(0, 0);
+
+    // create player
+    player = registry.create();
+    registry.emplace<PositionComponent>(player, PositionComponent{.val = Position{0, height, 0}});
 }
 
 void Game::FixedTick(double fixedDeltaTime)
@@ -96,7 +104,19 @@ void Game::Tick(double deltaTime)
 
 void Game::RenderScene(Camera &camera)
 {
-    ChunkRenderSystem::Tick(camera, registry);
+    auto &pos = registry.get<PositionComponent>(player);
+    pos.val = camera.GetPos();
+
+    auto last_chunk_index = WorldUtils::GetChunkIndexViaLocation(player_last_pos);
+    auto curr_chunk_index = WorldUtils::GetChunkIndexViaLocation(pos.val);
+    if(last_chunk_index != curr_chunk_index && chunk_entity_map.find(curr_chunk_index) == chunk_entity_map.end())
+    {
+        auto entity = registry.create();
+        registry.emplace<ChunkInitComponent>(entity, ChunkInitComponent{.chunk_index=curr_chunk_index});
+    }
+
+    ChunkRenderSystem::Tick(camera, registry, 80.f);
+    player_last_pos = pos.val;
 }
 
 void Game::RenderUI()

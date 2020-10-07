@@ -299,11 +299,7 @@ struct ChunkMeshInitSystem {
             }
         }
 
-        auto view2 = registry.view<ChunkMeshInitComponent>();
-        for(auto entity : view2)
-        {
-            registry.remove<ChunkMeshInitComponent>(entity);
-        }
+        registry.clear<ChunkMeshInitComponent>();
     }
 
     // avoid data race

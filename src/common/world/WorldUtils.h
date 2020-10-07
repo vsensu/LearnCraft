@@ -22,6 +22,15 @@ public:
 					voxelIndex.z < 0 || voxelIndex.z >= WorldConfig::kChunkSizeZ;
 	}
 
+    static ChunkIndex
+    WorldUtils::GetChunkIndexViaLocation(const Position &pos)
+    {
+        int index_x = static_cast<int>(std::floor(pos.x / WorldConfig::kChunkSizeX));
+        int index_y = static_cast<int>(std::floor(pos.y / WorldConfig::kChunkSizeY));
+        int index_z = static_cast<int>(std::floor(pos.z / WorldConfig::kChunkSizeZ));
+        return std::make_tuple(index_x, index_y, index_z);
+    }
+
 	static ChunkIndex
 	GetChunkIndexViaLocation(float x, float y, float z);
 	static VoxelIndex

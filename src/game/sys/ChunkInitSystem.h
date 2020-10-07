@@ -32,11 +32,7 @@ struct ChunkInitSystem{
             registry.emplace<ChunkMeshInitComponent>(entity);
         }
 
-        auto remove_view = registry.view<ChunkInitComponent>();
-        for(auto entity : remove_view)
-        {
-            registry.remove<ChunkInitComponent>(entity);
-        }
+        registry.clear<ChunkInitComponent>();
     }
 };
 
