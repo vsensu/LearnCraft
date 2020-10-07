@@ -6,19 +6,12 @@
 
 #include <iostream>
 
-#include <glm/glm.hpp>
 #include <imgui.h>
 #include <glad/glad.h>
 
 #define DEBUG_GL_ERRORS
 
 #include "common/gl_errors.h"
-#include "common/world/WorldConfig.h"
-#include "common/world/WorldUtils.h"
-#include "common/world/Chunk.h"
-#include "common/NoiseTool.h"
-#include "common/world/ChunkGenerator.h"
-#include "common/world/ChunkRender.h"
 #include "gameplay.h"
 
 namespace
@@ -43,42 +36,21 @@ GameApplication::Init()
     glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window_, mouse_callback);
     glfwSetScrollCallback(window_, scroll_callback);
+
     camera = &camera_;
 
-    InitGameCore(registry);
+    game.Init();
 
-    auto InitWorld = [&]() {
-        NoiseTool::GenerateHeightCache(-50, -50, 50, 50);
-        int center_x = 0, center_z = 0;
-        int initSize = 5;
-        int chunk_vertical = 16;
-
-        for (int x = center_x - initSize; x < center_x + initSize; ++x) {
-            for (int z = center_z - initSize; z < center_z + initSize; ++z) {
-                for (int y = 0; y < chunk_vertical; ++y) {
-                    ChunkIndex chunk_index{x, y, z};
-                    auto entity = registry.create();
-                    registry.emplace<ChunkInitComponent>(entity, ChunkInitComponent{.chunk_index = chunk_index});
-                }
-            }
-        }
-
-        auto height = NoiseTool::GenerateHeightWithCache(0, 0);
-        camera_.SetPos(glm::vec3{0, height + 5, 0});
-        world_loaded_ = true;
-    };
-
-    InitWorld();
-//    init_world_ = std::async(std::launch::async, InitWorld);
+    auto height = NoiseTool::GenerateHeightWithCache(0, 0);
+    camera_.SetPos(glm::vec3{0, height + 5, 0});
+    world_loaded_ = true;
 }
 
 void GameApplication::Update()
 {
 	camera_.Update(delta_time_);
 
-    VoxelEntityGenerator generator;
-    ChunkInitSystem::Tick(generator, registry);
-    ChunkMeshInitSystem::Tick(registry);
+    game.Tick(delta_time_);
 }
 
 
@@ -86,10 +58,7 @@ void GameApplication::RenderScene()
 {
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    if(world_loaded_)
-    {
-        ChunkRenderSystem::Tick(camera_, registry);
-    }
+    game.RenderScene(camera_);
 }
 
 void GameApplication::RenderUI()
@@ -101,34 +70,14 @@ void GameApplication::RenderUI()
     {
         ImGui::Text("Loading ...");
     }
-    static bool show = false;
-    if(ImGui::Button("Show voxel info"))
-	{
-    	show = true;
-	}
-
-    if(show)
-	{
-    	world_->GetVoxelManager().ForEach([](voxel_t t, const VoxelTypeData &data){
-			ImGui::Text(data.name.data());
-//			if(t == static_cast<voxel_t>(CommonVoxel::Air))
-//				try{
-//					auto meta = std::any_cast<CustomData>(data.metadata);
-//					ImGui::Text("hp: %d", meta.hp);
-//				}
-//				catch (...)
-//				{
-//				}
-		});
-	}
-//    ImGui::Text("vertex: %d index: %d", mesh.vertices.size(), mesh.indices.size());
 
     auto pos = camera_.GetPos();
     ImGui::Text("Camera pos:%f,%f,%f", pos.x, pos.y, pos.z);
     auto forward = camera_.GetForward();
     ImGui::Text("Camera forward:%f,%f,%f", forward.x, forward.y, forward.z);
-    ImGui::Text("draw vertex:%lu", ChunkRenderSystem::vertex_draw_count);
     ImGui::End();
+
+    game.RenderUI();
 }
 
 void GameApplication::HandleKeyboard(GLFWwindow *window)

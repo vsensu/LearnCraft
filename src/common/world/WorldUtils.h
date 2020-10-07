@@ -56,6 +56,61 @@ public:
 
 	    return false;
     }
+
+    std::tuple<ChunkIndex, VoxelIndex> StandardizeVoxelIndex(const ChunkIndex& chunkIndex, UnboundVoxelIndex unboundIndex)
+    {
+        if(WorldUtils::IsVoxelOutOfChunkBounds(unboundIndex))
+        {
+            // neighbour
+            auto[index_x, index_y, index_z] = chunkIndex;
+            int x = unboundIndex.x, y = unboundIndex.y, z = unboundIndex.z;
+            if (x < 0)
+            {
+                index_x--;
+                x = WorldConfig::kChunkSizeX - 1;
+            }
+            else if (x > WorldConfig::kChunkSizeX - 1)
+            {
+                index_x++;
+                x = 0;
+            }
+
+            if (y < 0)
+            {
+                index_y--;
+                y = WorldConfig::kChunkSizeY - 1;
+            }
+            else if (y > WorldConfig::kChunkSizeY - 1)
+            {
+                index_y++;
+                y = 0;
+            }
+
+            if (z < 0)
+            {
+                index_z--;
+                z = WorldConfig::kChunkSizeZ - 1;
+            }
+            else if (z > WorldConfig::kChunkSizeZ - 1)
+            {
+                index_z++;
+                z = 0;
+            }
+
+            auto new_chunk_index = std::make_tuple(index_x, index_y, index_z);
+            if (new_chunk_index == chunkIndex)
+            {
+                terminate();
+//			UE_LOG(LogTemp, Warning, TEXT("Recursive chunk: %d,%d,%d"), index_x, index_y, index_z);
+            }
+            auto new_voxel_index = VoxelIndex(x, y, z);
+            return std::make_tuple(new_chunk_index, new_voxel_index);
+        }
+        else
+        {
+            return std::make_tuple(chunkIndex, unboundIndex);
+        }
+    }
 };
 
 #endif //LEARNCRAFT_SRC_COMMON_WORLD_WORLDUTILS_H
