@@ -70,7 +70,8 @@ GameApplication::Init()
         world_loaded_ = true;
     };
 
-    init_world_ = std::async(std::launch::async, InitWorld);
+    InitWorld();
+//    init_world_ = std::async(std::launch::async, InitWorld);
 }
 
 void GameApplication::Update()

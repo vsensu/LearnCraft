@@ -37,7 +37,8 @@ public:
 
 	static inline std::size_t voxel_index_to_data_index(const VoxelIndex &voxelIndex)
 	{
-		return voxelIndex.x * (WorldConfig::kChunkSizeY * WorldConfig::kChunkSizeZ) + voxelIndex.z * WorldConfig::kChunkSizeY + voxelIndex.y;
+//		return voxelIndex.x * (WorldConfig::kChunkSizeY * WorldConfig::kChunkSizeZ) + voxelIndex.z * WorldConfig::kChunkSizeY + voxelIndex.y;
+        return voxelIndex.y * (WorldConfig::kChunkSizeX * WorldConfig::kChunkSizeZ) + voxelIndex.z * WorldConfig::kChunkSizeX + voxelIndex.x;
 	}
 
 	static inline voxel_t make_air_voxel()
