@@ -191,6 +191,8 @@ void Game::RenderScene(Camera &camera)
     DrawDebug::SetProjView(camera.Perspective(800.f/600) * camera.View());
     DrawDebug::Render();
 
+    CollectChunksToUpdateMesh();
+
     player_last_pos = pos.val;
 }
 
@@ -238,6 +240,17 @@ std::optional<VoxelPosition> Game::tryInteract(bool dig,
     return {};
 }
 
+void Game::SetVoxelEntity(const VoxelPosition &pos, entt::entity new_entity) {
+    auto[chunkIndex, voxelIndex] = WorldUtils::GlobalLocationToVoxel(pos);
+    auto chunk_entity = chunk_entity_map[chunkIndex];
+    auto &voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(chunk_entity);
+    auto &voxel_entity = voxel_entities.voxels[WorldUtils::voxel_index_to_data_index(voxelIndex)];
+    entt::entity old_entity = voxel_entity;
+    voxel_entity = new_entity;
+    voxel_entities_changed.push_back(
+            ChunkEntityChange{.pos = pos, .old_entity = old_entity, .new_entity = new_entity});
+}
+
 void Game::HandleKeyboard(GLFWwindow *window)
 {
     static bool mouse_left_pressed = false;
@@ -247,16 +260,7 @@ void Game::HandleKeyboard(GLFWwindow *window)
         mouse_left_pressed = true;
         if(hit.has_value())
         {
-            auto[chunkIndex, voxelIndex] = WorldUtils::GlobalLocationToVoxel(hit.value());
-            auto chunk_entity = chunk_entity_map[chunkIndex];
-            auto &voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(chunk_entity);
-            auto &voxel_entity = voxel_entities.voxels[WorldUtils::voxel_index_to_data_index(voxelIndex)];
-            if(voxel_entity != CoreEntity::Block_Empty)
-            {
-                voxel_entity = CoreEntity::Block_Empty;
-                registry.remove<ChunkRenderComponent>(chunk_entity);
-                registry.emplace<ChunkMeshInitComponent>(chunk_entity);
-            }
+            SetVoxelEntity(hit.value(), CoreEntity::Block_Empty);
         }
     }
     if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_RELEASE)
@@ -272,17 +276,42 @@ void Game::HandleKeyboard(GLFWwindow *window)
         hit = tryInteract(false, pos.val, rot.val);
         if(hit.has_value())
         {
-            auto[chunkIndex, voxelIndex] = WorldUtils::GlobalLocationToVoxel(hit.value());
-            auto chunk_entity = chunk_entity_map[chunkIndex];
-            auto &voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(chunk_entity);
-            auto &voxel_entity = voxel_entities.voxels[WorldUtils::voxel_index_to_data_index(voxelIndex)];
-            voxel_entity = CoreEntity::Block_Stone;
-            registry.remove<ChunkRenderComponent>(chunk_entity);
-            registry.emplace<ChunkMeshInitComponent>(chunk_entity);
+            SetVoxelEntity(hit.value(), CoreEntity::Block_Stone);
         }
     }
     if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2) == GLFW_RELEASE)
     {
         mouse_right_pressed = false;
+    }
+}
+
+void Game::CollectChunksToUpdateMesh()
+{
+    std::set<ChunkIndex> chunks_mesh_to_update;
+    for(const auto &voxel_changed : voxel_entities_changed)
+    {
+        auto[chunkIndex, voxelIndex] = WorldUtils::GlobalLocationToVoxel(voxel_changed.pos);
+        chunks_mesh_to_update.emplace(chunkIndex);
+
+        auto [chunk_index_x, chunk_index_y, chunk_index_z] = chunkIndex;
+
+        if(voxelIndex.x == 0)
+            chunks_mesh_to_update.emplace(ChunkIndex{chunk_index_x-1, chunk_index_y, chunk_index_z});
+        if(voxelIndex.x+1 == WorldConfig::kChunkSizeX)
+            chunks_mesh_to_update.emplace(ChunkIndex{chunk_index_x+1, chunk_index_y, chunk_index_z});
+        if(voxelIndex.y == 0)
+            chunks_mesh_to_update.emplace(ChunkIndex{chunk_index_x, chunk_index_y-1, chunk_index_z});
+        if(voxelIndex.y+1 == WorldConfig::kChunkSizeY)
+            chunks_mesh_to_update.emplace(ChunkIndex{chunk_index_x, chunk_index_y+1, chunk_index_z});
+        if(voxelIndex.z == 0)
+            chunks_mesh_to_update.emplace(ChunkIndex{chunk_index_x, chunk_index_y, chunk_index_z-1});
+        if(voxelIndex.z+1 == WorldConfig::kChunkSizeZ)
+            chunks_mesh_to_update.emplace(ChunkIndex{chunk_index_x, chunk_index_y, chunk_index_z+1});
+    }
+    for(const auto &chunk_mesh_to_update : chunks_mesh_to_update)
+    {
+        auto chunk_entity = chunk_entity_map[chunk_mesh_to_update];
+        registry.remove<ChunkRenderComponent>(chunk_entity);
+        registry.emplace<ChunkMeshInitComponent>(chunk_entity);
     }
 }

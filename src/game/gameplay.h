@@ -13,12 +13,21 @@
 
 struct Game
 {
+    struct ChunkEntityChange
+    {
+        VoxelPosition pos;
+        entt::entity old_entity;
+        entt::entity new_entity;
+    };
+
     void Init();
     void FixedTick(double fixedDeltaTime);
     void Tick(double deltaTime);
     void RenderScene(Camera &camera);
     void RenderUI();
     void HandleKeyboard(GLFWwindow *window);
+    void SetVoxelEntity(const VoxelPosition &pos, entt::entity new_entity);
+    void CollectChunksToUpdateMesh();
 
     entt::registry registry;
     TextureManager texture_manager;
@@ -39,6 +48,7 @@ struct Game
 
 
     std::optional<VoxelPosition> hit;
+    std::vector<ChunkEntityChange> voxel_entities_changed;
 };
 
 struct VoxelTexturePathComponent
