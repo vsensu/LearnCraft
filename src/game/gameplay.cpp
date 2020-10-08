@@ -86,9 +86,6 @@ void Game::Init()
         }
     }
 
-    // Tick at begin
-    Tick(0.f);
-
     // get player spawn location
     auto height = NoiseTool::GenerateHeightWithCache(0, 0);
 
@@ -111,6 +108,10 @@ void Game::Tick(double deltaTime)
     VoxelEntityGenerator generator;
     ChunkInitSystem::Tick(chunk_entity_map, generator, registry);
     ChunkMeshInitSystem::Tick(registry, chunk_entity_map);
+
+    auto &pos = registry.get<PositionComponent>(player);
+    auto &rot = registry.get<RotationComponent>(player);
+    hit = tryInteract(true, pos.val, rot.val);
 }
 
 void Game::RenderScene(Camera &camera)
@@ -183,10 +184,10 @@ void Game::RenderScene(Camera &camera)
         }
     }
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     ChunkRenderSystem::Tick(camera, registry, 80.f);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     DrawDebug::SetProjView(camera.Perspective(800.f/600) * camera.View());
     DrawDebug::Render();
 
@@ -197,15 +198,12 @@ void Game::RenderUI()
 {
     ImGui::Begin("Game");
     ImGui::Text("draw vertex:%lu", ChunkRenderSystem::vertex_draw_count);
-    auto &pos = registry.get<PositionComponent>(player);
-    auto &rot = registry.get<RotationComponent>(player);
-    hit = tryInteract(true, pos.val, rot.val);
+
     if(hit.has_value())
     {
         auto hit_entity = GetVoxelEntity(hit.value());
         auto &hit_data = registry.get<VoxelDataComponent>(hit_entity);
         ImGui::Text("Hit: %s", hit_data.name.c_str());
-
         DrawDebug::DrawDebugBox(hit.value());
     }
     ImGui::End();
@@ -238,4 +236,53 @@ std::optional<VoxelPosition> Game::tryInteract(bool dig,
         previous = voxelPosition;
     }
     return {};
+}
+
+void Game::HandleKeyboard(GLFWwindow *window)
+{
+    static bool mouse_left_pressed = false;
+    static bool mouse_right_pressed = false;
+    if(!mouse_left_pressed && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)
+    {
+        mouse_left_pressed = true;
+        if(hit.has_value())
+        {
+            auto[chunkIndex, voxelIndex] = WorldUtils::GlobalLocationToVoxel(hit.value());
+            auto chunk_entity = chunk_entity_map[chunkIndex];
+            auto &voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(chunk_entity);
+            auto &voxel_entity = voxel_entities.voxels[WorldUtils::voxel_index_to_data_index(voxelIndex)];
+            if(voxel_entity != CoreEntity::Block_Empty)
+            {
+                voxel_entity = CoreEntity::Block_Empty;
+                registry.remove<ChunkRenderComponent>(chunk_entity);
+                registry.emplace<ChunkMeshInitComponent>(chunk_entity);
+            }
+        }
+    }
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_RELEASE)
+    {
+        mouse_left_pressed = false;
+    }
+
+    if(!mouse_right_pressed && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2) == GLFW_PRESS)
+    {
+        mouse_right_pressed = true;
+        auto &pos = registry.get<PositionComponent>(player);
+        auto &rot = registry.get<RotationComponent>(player);
+        hit = tryInteract(false, pos.val, rot.val);
+        if(hit.has_value())
+        {
+            auto[chunkIndex, voxelIndex] = WorldUtils::GlobalLocationToVoxel(hit.value());
+            auto chunk_entity = chunk_entity_map[chunkIndex];
+            auto &voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(chunk_entity);
+            auto &voxel_entity = voxel_entities.voxels[WorldUtils::voxel_index_to_data_index(voxelIndex)];
+            voxel_entity = CoreEntity::Block_Stone;
+            registry.remove<ChunkRenderComponent>(chunk_entity);
+            registry.emplace<ChunkMeshInitComponent>(chunk_entity);
+        }
+    }
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2) == GLFW_RELEASE)
+    {
+        mouse_right_pressed = false;
+    }
 }

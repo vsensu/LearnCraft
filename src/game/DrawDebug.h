@@ -48,6 +48,12 @@ void main() {
 
 struct VoxelBuffer
 {
+    ~VoxelBuffer()
+    {
+        glBindVertexArray(0);
+        glDeleteBuffers(1, &vbo);
+    }
+
     void CreateBuff(const std::vector<u32> &vertices, const std::vector<u32> &indices)
     {
         index_count = indices.size();

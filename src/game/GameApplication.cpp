@@ -110,6 +110,7 @@ void GameApplication::HandleKeyboard(GLFWwindow *window)
             glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
+    game.HandleKeyboard(window);
 }
 
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)

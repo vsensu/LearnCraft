@@ -18,6 +18,7 @@ struct Game
     void Tick(double deltaTime);
     void RenderScene(Camera &camera);
     void RenderUI();
+    void HandleKeyboard(GLFWwindow *window);
 
     entt::registry registry;
     TextureManager texture_manager;
