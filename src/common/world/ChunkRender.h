@@ -112,7 +112,7 @@ struct ChunkBuffGL
     void draw()
     {
         glBindVertexArray(vao);
-        glCheck(glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr));
+        glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr);
     }
 
     GLuint vao, vbo, ebo;

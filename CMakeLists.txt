@@ -24,7 +24,7 @@ add_executable(LearnCraft src/main.cpp deps/glad/src/glad.c src/platforms/imgui_
         src/common/world/TextureManager.h
         src/common/world/World.cpp src/common/world/Chunk.cpp src/common/NoiseTool.cpp src/common/Perlin_Noise/ppm.cpp
         src/common/Perlin_Noise/PerlinNoise.cpp src/common/world/VoxelManager.h
-        src/common/Application.cpp src/game/GameApplication.cpp src/game/gameplay.h src/game/sys/ChunkRenderSystem.h src/game/comp/PositionComponent.h src/game/comp/ChunkRenderComponent.h src/game/comp/ChunkIndexComponent.h src/game/entities.h src/game/comp/VoxelDataComponent.h src/game/sys/ChunkInitSystem.h src/game/comp/ChunkVoxelEntitiesComponent.h src/game/comp/ChunkInitComponent.h src/game/sys/ChunkMeshInitSystem.h src/game/comp/ChunkMeshInitComponent.h src/game/comp/RuntimeVoxelTextureLayerComponent.h src/game/Terrain.h src/game/gameplay.cpp src/game/comp/RotationComponent.h)
+        src/common/Application.cpp src/game/GameApplication.cpp src/game/gameplay.h src/game/sys/ChunkRenderSystem.h src/game/comp/PositionComponent.h src/game/comp/ChunkRenderComponent.h src/game/comp/ChunkIndexComponent.h src/game/entities.h src/game/comp/VoxelDataComponent.h src/game/sys/ChunkInitSystem.h src/game/comp/ChunkVoxelEntitiesComponent.h src/game/comp/ChunkInitComponent.h src/game/sys/ChunkMeshInitSystem.h src/game/comp/ChunkMeshInitComponent.h src/game/comp/RuntimeVoxelTextureLayerComponent.h src/game/Terrain.h src/game/gameplay.cpp src/game/comp/RotationComponent.h src/game/DrawDebug.h src/game/DrawDebug.cpp)
 target_link_libraries(LearnCraft ${CONAN_LIBS})
 
 

@@ -36,6 +36,8 @@ struct Game
                                              const glm::vec3& position,
                                              const glm::vec3& rotation);
 
+
+    std::optional<VoxelPosition> hit;
 };
 
 struct VoxelTexturePathComponent

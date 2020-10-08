@@ -16,6 +16,7 @@
 
 #include "entities.h"
 #include "Terrain.h"
+#include "DrawDebug.h"
 
 void Game::Init()
 {
@@ -96,6 +97,8 @@ void Game::Init()
     registry.emplace<PositionComponent>(player, PositionComponent{.val = Position{0, height, 0}});
     registry.emplace<RotationComponent>(player, RotationComponent{.val = {0, 0, 0}});
     player_last_pos = {0, 0, 0};
+
+    DrawDebug::Init();
 }
 
 void Game::FixedTick(double fixedDeltaTime)
@@ -180,7 +183,13 @@ void Game::RenderScene(Camera &camera)
         }
     }
 
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     ChunkRenderSystem::Tick(camera, registry, 80.f);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    DrawDebug::SetProjView(camera.Perspective(800.f/600) * camera.View());
+    DrawDebug::Render();
+
     player_last_pos = pos.val;
 }
 
@@ -190,12 +199,14 @@ void Game::RenderUI()
     ImGui::Text("draw vertex:%lu", ChunkRenderSystem::vertex_draw_count);
     auto &pos = registry.get<PositionComponent>(player);
     auto &rot = registry.get<RotationComponent>(player);
-    auto hit = tryInteract(true, pos.val, rot.val);
+    hit = tryInteract(true, pos.val, rot.val);
     if(hit.has_value())
     {
         auto hit_entity = GetVoxelEntity(hit.value());
         auto &hit_data = registry.get<VoxelDataComponent>(hit_entity);
         ImGui::Text("Hit: %s", hit_data.name.c_str());
+
+        DrawDebug::DrawDebugBox(hit.value());
     }
     ImGui::End();
 }

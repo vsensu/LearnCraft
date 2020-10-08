@@ -70,6 +70,9 @@ public:
         last_x_ = xposf;
         last_y_ = yposf;
 
+        if(locked_)
+            return;
+
         float sensitivity = 0.05f;
         xoffset *= sensitivity;
         yoffset *= sensitivity;
@@ -113,6 +116,9 @@ public:
 
 	void Update(double deltaTime) { m_frustum.update(Perspective(aspect_) * View()); }
 
+	void Lock() { locked_ = true; }
+    void Unlock() { locked_ = false; }
+
 private:
     glm::vec3 pos_{glm::vec3(0.f, 0.f, 3.f)};
     glm::vec3 up_ {glm::vec3(0.f, 1.f, 0.f)};
@@ -127,6 +133,7 @@ private:
     float max_speed = 10.f;
 
 	ViewFrustum m_frustum;
+	bool locked_ {false};
 };
 
 #endif //MOT_CAMERA_H

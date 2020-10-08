@@ -38,6 +38,7 @@ GameApplication::Init()
     glfwSetScrollCallback(window_, scroll_callback);
 
     camera = &camera_;
+    camera->Unlock();
 
     game.Init();
 
@@ -100,10 +101,14 @@ void GameApplication::HandleKeyboard(GLFWwindow *window)
         cursor_key_pressed = false;
         static bool disable_cursor = true;
         disable_cursor = !disable_cursor;
-        if(disable_cursor)
+        if(disable_cursor){
+            camera_.Unlock();
             glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        else
+        }
+        else{
+            camera_.Lock();
             glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
     }
 }
 
