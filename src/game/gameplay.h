@@ -9,6 +9,7 @@
 #include <common/world/TextureManager.h>
 #include <common/HashTuple.h>
 #include <common/Camera.h>
+#include <common/world/WorldUtils.h>
 
 struct Game
 {
@@ -28,6 +29,13 @@ struct Game
     glm::u8vec3 chunk_sight {2, 2, 2};
 
     Position player_last_pos;
+
+    entt::entity GetVoxelEntity(const VoxelPosition &pos);
+
+    std::optional<VoxelPosition> tryInteract(bool dig,
+                                             const glm::vec3& position,
+                                             const glm::vec3& rotation);
+
 };
 
 struct VoxelTexturePathComponent

@@ -22,6 +22,18 @@ WorldUtils::GlobalLocationToVoxelIndex(float x, float y, float z)
 	int block_z = static_cast<int>(std::floor(z - chunk_index_z * WorldConfig::kChunkSizeZ));
 	return VoxelIndex(block_x, block_y, block_z);
 }
+
+std::tuple<ChunkIndex, VoxelIndex>
+WorldUtils::GlobalLocationToVoxel(const VoxelPosition &pos)
+{
+    auto chunkIndex = GetChunkIndexViaLocation(pos.x, pos.y, pos.z);
+    auto[chunk_index_x, chunk_index_y, chunk_index_z] = chunkIndex;
+    int block_x = static_cast<int>(std::floor(pos.x - chunk_index_x * WorldConfig::kChunkSizeX));
+    int block_y = static_cast<int>(std::floor(pos.y - chunk_index_y * WorldConfig::kChunkSizeY));
+    int block_z = static_cast<int>(std::floor(pos.z - chunk_index_z * WorldConfig::kChunkSizeZ));
+    return std::make_tuple(chunkIndex, VoxelIndex(block_x, block_y, block_z));
+}
+
 Position
 WorldUtils::VoxelIndexToGlobalLocation(const VoxelIndex& voxelIndex)
 {

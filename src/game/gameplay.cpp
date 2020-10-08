@@ -11,6 +11,7 @@
 #include <game/comp/RuntimeVoxelTextureLayerComponent.h>
 #include <game/sys/ChunkInitSystem.h>
 #include <game/sys/ChunkMeshInitSystem.h>
+#include <game/comp/RotationComponent.h>
 #include <imgui.h>
 
 #include "entities.h"
@@ -93,6 +94,7 @@ void Game::Init()
     // create player
     player = registry.create();
     registry.emplace<PositionComponent>(player, PositionComponent{.val = Position{0, height, 0}});
+    registry.emplace<RotationComponent>(player, RotationComponent{.val = {0, 0, 0}});
     player_last_pos = {0, 0, 0};
 }
 
@@ -111,7 +113,9 @@ void Game::Tick(double deltaTime)
 void Game::RenderScene(Camera &camera)
 {
     auto &pos = registry.get<PositionComponent>(player);
+    auto &rot = registry.get<RotationComponent>(player);
     pos.val = camera.GetPos();
+    rot.val = camera.GetForward();
 
     auto last_chunk_index = WorldUtils::GetChunkIndexViaLocation(player_last_pos);
     auto curr_chunk_index = WorldUtils::GetChunkIndexViaLocation(pos.val);
@@ -184,5 +188,43 @@ void Game::RenderUI()
 {
     ImGui::Begin("Game");
     ImGui::Text("draw vertex:%lu", ChunkRenderSystem::vertex_draw_count);
+    auto &pos = registry.get<PositionComponent>(player);
+    auto &rot = registry.get<RotationComponent>(player);
+    auto hit = tryInteract(true, pos.val, rot.val);
+    if(hit.has_value())
+    {
+        auto hit_entity = GetVoxelEntity(hit.value());
+        auto &hit_data = registry.get<VoxelDataComponent>(hit_entity);
+        ImGui::Text("Hit: %s", hit_data.name.c_str());
+    }
     ImGui::End();
+}
+
+entt::entity Game::GetVoxelEntity(const VoxelPosition &pos) {
+    auto[chunkIndex, voxelIndex] = WorldUtils::GlobalLocationToVoxel(pos);
+    auto chunk_entity = chunk_entity_map[chunkIndex];
+    auto & voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(chunk_entity);
+    auto voxel_entity = voxel_entities.voxels[WorldUtils::voxel_index_to_data_index(voxelIndex)];
+    return voxel_entity;
+}
+
+std::optional<VoxelPosition> Game::tryInteract(bool dig,
+                                               const glm::vec3 &position,
+                                               const glm::vec3 &forward) {
+//    auto voxelPositions = WorldUtils::getIntersectedVoxels(position, WorldUtils::forwardsVector(rotation), 8);
+    auto voxelPositions = WorldUtils::getIntersectedVoxels(position, forward, 8);
+    if (voxelPositions.empty()) {
+        return {};
+    }
+    VoxelPosition &previous = voxelPositions.at(0);
+
+    for (auto &voxelPosition : voxelPositions) {
+        auto voxel_entity = GetVoxelEntity(voxelPosition);
+        auto &voxel_data = registry.get<VoxelDataComponent>(voxel_entity);
+        if (has_trait_opaque(voxel_data.traits)) {
+            return dig ? voxelPosition : previous;
+        }
+        previous = voxelPosition;
+    }
+    return {};
 }
