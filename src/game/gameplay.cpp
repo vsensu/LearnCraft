@@ -112,6 +112,7 @@ void Game::RenderScene(Camera &camera)
     if(last_chunk_index != curr_chunk_index && chunk_entity_map.find(curr_chunk_index) == chunk_entity_map.end())
     {
         auto entity = registry.create();
+        std::cout << "create new chunk " << static_cast<int>(entity) << "\n";
         registry.emplace<ChunkInitComponent>(entity, ChunkInitComponent{.chunk_index=curr_chunk_index});
     }
 

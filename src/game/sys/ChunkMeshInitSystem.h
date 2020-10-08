@@ -49,7 +49,7 @@ struct ChunkMeshInitSystem {
                 ChunkIndex top_chunk_index = ChunkIndex{chunk_index_x, chunk_index_y+1, chunk_index_z};
                 if(auto another_chunk_find = chunk_entity_map.find(top_chunk_index); another_chunk_find != chunk_entity_map.end())
                 {
-                    auto &another_voxel_entities = view.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
+                    auto &another_voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
                     for (int z = 0; z < WorldConfig::kChunkSizeZ; ++z) {
                         for (int x = 0; x < WorldConfig::kChunkSizeX; ++x) {
                             auto voxel_index = VoxelIndex{x, WorldConfig::kChunkSizeY-1, z};
@@ -62,7 +62,7 @@ struct ChunkMeshInitSystem {
                             // Get above voxel data
                             auto another_array_index = WorldUtils::voxel_index_to_data_index({x, 0, z});
                             auto another_voxel_entity = another_voxel_entities.voxels[another_array_index];
-                            auto &another_voxel_data = voxel_view.get<VoxelDataComponent>(another_voxel_entity);
+                            auto &another_voxel_data = registry.get<VoxelDataComponent>(another_voxel_entity);
 
                             if(!has_trait_opaque(another_voxel_data.traits))
                             {
@@ -90,7 +90,7 @@ struct ChunkMeshInitSystem {
                 ChunkIndex bottom_chunk_index = ChunkIndex{chunk_index_x, chunk_index_y-1, chunk_index_z};
                 if(auto another_chunk_find = chunk_entity_map.find(bottom_chunk_index); another_chunk_find != chunk_entity_map.end())
                 {
-                    auto &another_voxel_entities = view.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
+                    auto &another_voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
                     for (int z = 0; z < WorldConfig::kChunkSizeZ; ++z) {
                         for (int x = 0; x < WorldConfig::kChunkSizeX; ++x) {
                             auto voxel_index = VoxelIndex{x, 0, z};
@@ -103,7 +103,7 @@ struct ChunkMeshInitSystem {
                             // Get bellow voxel data
                             auto another_array_index = WorldUtils::voxel_index_to_data_index({x, WorldConfig::kChunkSizeY-1, z});
                             auto another_voxel_entity = another_voxel_entities.voxels[another_array_index];
-                            auto &another_voxel_data = voxel_view.get<VoxelDataComponent>(another_voxel_entity);
+                            auto &another_voxel_data = registry.get<VoxelDataComponent>(another_voxel_entity);
 
                             if(!has_trait_opaque(another_voxel_data.traits))
                             {
@@ -131,7 +131,7 @@ struct ChunkMeshInitSystem {
                 ChunkIndex left_chunk_index = ChunkIndex{chunk_index_x-1, chunk_index_y, chunk_index_z};
                 if(auto another_chunk_find = chunk_entity_map.find(left_chunk_index); another_chunk_find != chunk_entity_map.end())
                 {
-                    auto &another_voxel_entities = view.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
+                    auto &another_voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
                     for (int y = 0; y < WorldConfig::kChunkSizeY; ++y) {
                         for (int z = 0; z < WorldConfig::kChunkSizeZ; ++z) {
                             auto voxel_index = VoxelIndex{0, y, z};
@@ -144,7 +144,7 @@ struct ChunkMeshInitSystem {
                             // Get left voxel data
                             auto another_array_index = WorldUtils::voxel_index_to_data_index({WorldConfig::kChunkSizeX-1, y, z});
                             auto another_voxel_entity = another_voxel_entities.voxels[another_array_index];
-                            auto &another_voxel_data = voxel_view.get<VoxelDataComponent>(another_voxel_entity);
+                            auto &another_voxel_data = registry.get<VoxelDataComponent>(another_voxel_entity);
 
                             if(!has_trait_opaque(another_voxel_data.traits))
                             {
@@ -172,7 +172,7 @@ struct ChunkMeshInitSystem {
                 ChunkIndex right_chunk_index = ChunkIndex{chunk_index_x+1, chunk_index_y, chunk_index_z};
                 if(auto another_chunk_find = chunk_entity_map.find(right_chunk_index); another_chunk_find != chunk_entity_map.end())
                 {
-                    auto &another_voxel_entities = view.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
+                    auto &another_voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
                     for (int y = 0; y < WorldConfig::kChunkSizeY; ++y) {
                         for (int z = 0; z < WorldConfig::kChunkSizeZ; ++z) {
                             auto voxel_index = VoxelIndex{WorldConfig::kChunkSizeX-1, y, z};
@@ -185,7 +185,7 @@ struct ChunkMeshInitSystem {
                             // Get right voxel data
                             auto another_array_index = WorldUtils::voxel_index_to_data_index({0, y, z});
                             auto another_voxel_entity = another_voxel_entities.voxels[another_array_index];
-                            auto &another_voxel_data = voxel_view.get<VoxelDataComponent>(another_voxel_entity);
+                            auto &another_voxel_data = registry.get<VoxelDataComponent>(another_voxel_entity);
 
                             if(!has_trait_opaque(another_voxel_data.traits))
                             {
@@ -213,7 +213,7 @@ struct ChunkMeshInitSystem {
                 ChunkIndex front_chunk_index = ChunkIndex{chunk_index_x, chunk_index_y, chunk_index_z+1};
                 if(auto another_chunk_find = chunk_entity_map.find(front_chunk_index); another_chunk_find != chunk_entity_map.end())
                 {
-                    auto &another_voxel_entities = view.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
+                    auto &another_voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
                     for (int y = 0; y < WorldConfig::kChunkSizeY; ++y) {
                         for (int x = 0; x < WorldConfig::kChunkSizeZ; ++x) {
                             auto voxel_index = VoxelIndex{x, y, WorldConfig::kChunkSizeZ-1};
@@ -226,7 +226,7 @@ struct ChunkMeshInitSystem {
                             // Get front voxel data
                             auto another_array_index = WorldUtils::voxel_index_to_data_index({x, y, 0});
                             auto another_voxel_entity = another_voxel_entities.voxels[another_array_index];
-                            auto &another_voxel_data = voxel_view.get<VoxelDataComponent>(another_voxel_entity);
+                            auto &another_voxel_data = registry.get<VoxelDataComponent>(another_voxel_entity);
 
                             if(!has_trait_opaque(another_voxel_data.traits))
                             {
@@ -254,7 +254,7 @@ struct ChunkMeshInitSystem {
                 ChunkIndex back_chunk_index = ChunkIndex{chunk_index_x, chunk_index_y, chunk_index_z-1};
                 if(auto another_chunk_find = chunk_entity_map.find(back_chunk_index); another_chunk_find != chunk_entity_map.end())
                 {
-                    auto &another_voxel_entities = view.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
+                    auto &another_voxel_entities = registry.get<ChunkVoxelEntitiesComponent>(another_chunk_find->second);
                     for (int y = 0; y < WorldConfig::kChunkSizeY; ++y) {
                         for (int x = 0; x < WorldConfig::kChunkSizeZ; ++x) {
                             auto voxel_index = VoxelIndex{x, y, 0};
@@ -267,7 +267,7 @@ struct ChunkMeshInitSystem {
                             // Get back voxel data
                             auto another_array_index = WorldUtils::voxel_index_to_data_index({x, y, WorldConfig::kChunkSizeZ-1});
                             auto another_voxel_entity = another_voxel_entities.voxels[another_array_index];
-                            auto &another_voxel_data = voxel_view.get<VoxelDataComponent>(another_voxel_entity);
+                            auto &another_voxel_data = registry.get<VoxelDataComponent>(another_voxel_entity);
 
                             if(!has_trait_opaque(another_voxel_data.traits))
                             {
