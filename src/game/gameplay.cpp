@@ -4,6 +4,8 @@
 
 #include "gameplay.h"
 
+#include <unordered_set>
+
 #include <game/sys/ChunkRenderSystem.h>
 #include <game/comp/VoxelDataComponent.h>
 #include <game/comp/RuntimeVoxelTextureLayerComponent.h>
@@ -82,12 +84,16 @@ void Game::Init()
         }
     }
 
+    // Tick at begin
+    Tick(0.f);
+
     // get player spawn location
     auto height = NoiseTool::GenerateHeightWithCache(0, 0);
 
     // create player
     player = registry.create();
     registry.emplace<PositionComponent>(player, PositionComponent{.val = Position{0, height, 0}});
+    player_last_pos = {0, 0, 0};
 }
 
 void Game::FixedTick(double fixedDeltaTime)
@@ -109,11 +115,65 @@ void Game::RenderScene(Camera &camera)
 
     auto last_chunk_index = WorldUtils::GetChunkIndexViaLocation(player_last_pos);
     auto curr_chunk_index = WorldUtils::GetChunkIndexViaLocation(pos.val);
-    if(last_chunk_index != curr_chunk_index && chunk_entity_map.find(curr_chunk_index) == chunk_entity_map.end())
+    auto [last_chunk_index_x, last_chunk_index_y, last_chunk_index_z] = last_chunk_index;
+    auto [curr_chunk_index_x, curr_chunk_index_y, curr_chunk_index_z] = curr_chunk_index;
+    if(last_chunk_index_x != curr_chunk_index_x || last_chunk_index_y != curr_chunk_index_y || last_chunk_index_z != curr_chunk_index_z)
     {
-        auto entity = registry.create();
-        std::cout << "create new chunk " << static_cast<int>(entity) << "\n";
-        registry.emplace<ChunkInitComponent>(entity, ChunkInitComponent{.chunk_index=curr_chunk_index});
+        int dx = curr_chunk_index_x - last_chunk_index_x;
+        int dy = curr_chunk_index_y - last_chunk_index_y;
+        int dz = curr_chunk_index_z - last_chunk_index_z;
+
+        int nx = dx > 0 ? 1 : -1;
+        int ny = dy > 0 ? 1 : -1;
+        int nz = dz > 0 ? 1 : -1;
+
+        int ox = last_chunk_index_x + nx * static_cast<int>(chunk_sight.x);
+        int oy = last_chunk_index_y + ny * static_cast<int>(chunk_sight.y);
+        int oz = last_chunk_index_z + nz * static_cast<int>(chunk_sight.z);
+        int tx = ox + dx;
+        int ty = oy + dy;
+        int tz = oz + dz;
+
+        std::unordered_set<ChunkIndex, hash_tuple> chunks_to_create;
+        for(int x = ox + nx; x != tx+nx; x += nx)
+        {
+            for(int y = -static_cast<int>(chunk_sight.y); y <= static_cast<int>(chunk_sight.y); ++y)
+            {
+               for(int z = -static_cast<int>(chunk_sight.z); z <= static_cast<int>(chunk_sight.z); ++z)
+               {
+                   ChunkIndex chunkIndex{x, curr_chunk_index_y+y, curr_chunk_index_z+z};
+                   chunks_to_create.emplace(chunkIndex);
+               }
+            }
+        }
+        for(int z = oz + nz; z != tz+nz; z += nz)
+        {
+            for(int y = -static_cast<int>(chunk_sight.y); y <= static_cast<int>(chunk_sight.y); ++y)
+            {
+                for(int x = -static_cast<int>(chunk_sight.x); x <= static_cast<int>(chunk_sight.x); ++x)
+                {
+                    ChunkIndex chunkIndex{curr_chunk_index_x+x, curr_chunk_index_y+y, z};
+                    chunks_to_create.emplace(chunkIndex);
+                }
+            }
+        }
+        for(int y = oy + ny; y != ty+ny; y += ny)
+        {
+            for(int x = -static_cast<int>(chunk_sight.x); x <= static_cast<int>(chunk_sight.x); ++x)
+            {
+                for(int z = -static_cast<int>(chunk_sight.z); z <= static_cast<int>(chunk_sight.z); ++z)
+                {
+                    ChunkIndex chunkIndex{curr_chunk_index_x+x, y, curr_chunk_index_z+z};
+                    chunks_to_create.emplace(chunkIndex);
+                }
+            }
+        }
+        for(const auto &chunkIndex : chunks_to_create){
+            if (chunk_entity_map.find(chunkIndex) == chunk_entity_map.end()) {
+                auto entity = registry.create();
+                registry.emplace<ChunkInitComponent>(entity, ChunkInitComponent{.chunk_index=chunkIndex});
+            }
+        }
     }
 
     ChunkRenderSystem::Tick(camera, registry, 80.f);

@@ -25,6 +25,8 @@ struct Game
     std::unordered_map<std::string, entt::entity> named_entities;
     entt::entity player;
 
+    glm::u8vec3 chunk_sight {2, 2, 2};
+
     Position player_last_pos;
 };
 
