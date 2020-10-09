@@ -36,6 +36,12 @@ void Game::Init()
     auto grass = registry.create(CoreEntity::Block_Grass);
     auto stone = registry.create(CoreEntity::Block_Stone);
 
+    voxel_prototypes.emplace_back(_debug_border);
+    voxel_prototypes.emplace_back(empty);
+    voxel_prototypes.emplace_back(dirt);
+    voxel_prototypes.emplace_back(grass);
+    voxel_prototypes.emplace_back(stone);
+
     named_entities[NamedEntities::Block_Empty] = empty;
     named_entities[NamedEntities::Block_Dirt] = dirt;
     named_entities[NamedEntities::Block_Grass] = grass;
@@ -207,6 +213,7 @@ void Game::RenderScene(Camera &camera)
 
 void Game::RenderUI()
 {
+//    ImGui::ShowDemoWindow();
     ImGui::Begin("Game");
     ImGui::Text("draw vertex:%lu", ChunkRenderSystem::vertex_draw_count);
 
@@ -217,6 +224,18 @@ void Game::RenderUI()
         ImGui::Text("Hit: %s", hit_data.name.c_str());
         DrawDebug::DrawDebugBox(hit.value());
     }
+
+    static int e = static_cast<int>(CoreEntity::Block_Dirt);
+    for (auto voxel_prototype_entity : voxel_prototypes) {
+        const auto &voxel_data = registry.get<VoxelDataComponent>(voxel_prototype_entity);
+        auto [uv_min, uv_max] = texture_manager.GetUV(voxel_data.name);
+        ImGui::Image((void *) (intptr_t) texture_manager.texture,
+                     ImVec2(texture_manager.unit_width, texture_manager.unit_height), ImVec2(uv_min.x, uv_min.y),
+                     ImVec2(uv_max.x, uv_max.y));
+        ImGui::SameLine();
+        ImGui::RadioButton(voxel_data.name.c_str(), &e, static_cast<int>(voxel_prototype_entity));
+    }
+    voxel_to_place = static_cast<entt::entity>(e);
     ImGui::End();
 }
 
@@ -285,7 +304,7 @@ void Game::HandleKeyboard(GLFWwindow *window)
         hit = tryInteract(false, pos.val, rot.val);
         if(hit.has_value())
         {
-            SetVoxelEntity(hit.value(), CoreEntity::Block_Stone);
+            SetVoxelEntity(hit.value(), voxel_to_place);
         }
     }
     if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2) == GLFW_RELEASE)

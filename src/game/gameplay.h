@@ -49,6 +49,8 @@ struct Game
 
     std::optional<VoxelPosition> hit;
     std::vector<ChunkEntityChange> voxel_entities_changed;
+    entt::entity voxel_to_place;
+    std::vector<entt::entity> voxel_prototypes;
 };
 
 struct VoxelTexturePathComponent

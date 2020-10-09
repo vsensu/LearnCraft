@@ -60,6 +60,9 @@ public:
 
     GLuint CreateTexture()
     {
+        unit_width = 16;
+        unit_height = 16;
+
         // 创建纹理对象
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -81,17 +84,32 @@ public:
                 stbi_image_free(data);
             }
         }
-        glTexImage2D(GL_TEXTURE_2D, 0 /*mipmap*/, GL_RGB, 16, 16*textures.size(), 0/*legacy*/, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
+        width = 16;
+        height = 16*textures.size();
+        glTexImage2D(GL_TEXTURE_2D, 0 /*mipmap*/, GL_RGB, width, height, 0/*legacy*/, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
         glGenerateMipmap(GL_TEXTURE_2D);
         return texture;
     }
 
     inline auto GetTextureNum() const { return textures.size(); }
 
+    int width;
+    int height;
+    GLuint texture;
+
+    int unit_width;
+    int unit_height;
+    inline float GetUnitUV() const { return 1.0f/static_cast<float>(GetTextureNum()); }
+    inline std::tuple<glm::vec2, glm::vec2> GetUV(const std::string &name)
+    {
+        auto layer = GetVoxelTextureLayer(name);
+        auto min_v = layer*GetUnitUV();
+        return std::make_tuple(glm::vec2(0, min_v), glm::vec2(1, min_v+GetUnitUV()));
+    }
+
 protected:
     std::vector<std::string> textures;
     std::unordered_map<std::string, tex_t> name_tex_map_;
-    GLuint texture;
 };
 
 #endif //LEARNCRAFT_TEXTUREMANAGER_H
