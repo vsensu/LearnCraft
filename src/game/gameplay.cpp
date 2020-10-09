@@ -18,14 +18,53 @@
 #include "Terrain.h"
 #include "DrawDebug.h"
 
+#include <sol/sol.hpp>
+
+struct LuaComp
+{
+    LuaComp(std::string value) { this->field_name = value; }
+
+    std::string field_name;
+};
+
+void lua_system(entt::registry &registry)
+{
+    auto view = registry.view<LuaComp>();
+    for(auto entity: view)
+    {
+        auto luacomp = view.get(entity);
+        std::cout << luacomp.field_name << "\n";
+    }
+}
+
+void add_lua_comp(entt::registry &registry, entt::entity entity, std::string value)
+{
+    registry.emplace<LuaComp>(entity, value);
+}
+
 void Game::Init()
 {
-    // load textures
-    texture_manager.RegisterTexture("_DEBUG_BORDER", "Textures/debug_border.jpg");
-    texture_manager.RegisterTexture("Empty", "Textures/dirt.jpg");
-    texture_manager.RegisterTexture("Dirt", "Textures/dirt.jpg");
-    texture_manager.RegisterTexture("Grass.Top", "Textures/grass.jpg");
-    texture_manager.RegisterTexture("Stone", "Textures/stone.jpg");
+    sol::state lua;
+    lua.open_libraries();
+
+    sol::usertype<TextureManager> texture_manager_type = lua.new_usertype<TextureManager>("TextureManager");
+    texture_manager_type["RegisterTexture"] = &TextureManager::RegisterTexture;
+
+    sol::usertype<entt::registry> registry_type = lua.new_usertype<entt::registry>("Registry");
+    entt::entity (entt::registry::*create_entity)() = &entt::registry::create;
+    entt::entity (entt::registry::*create_entity_hint)(const entt::entity) = &entt::registry::create;
+    registry_type["create"] = create_entity;
+    registry_type["create_with_hint"] = create_entity_hint;
+
+    sol::usertype<LuaComp> luacomp_type = lua.new_usertype<LuaComp>("LuaComp", sol::constructors<LuaComp(std::string)>());
+    luacomp_type["field_name"] = &LuaComp::field_name;
+
+    lua["texture_manager"] = &texture_manager;
+    lua["registry"] = &registry;
+    lua["add_lua_comp"] = add_lua_comp;
+
+    lua.script_file("init.lua");
+
     GLuint texture = texture_manager.CreateTexture();
     ChunkRenderSystem::init(texture);
 
@@ -61,10 +100,11 @@ void Game::Init()
             .left = _debug_border_layer, .right = _debug_border_layer,
             .top = _debug_border_layer, .bottom = _debug_border_layer,
     });
+    auto empty_layer = texture_manager.GetVoxelTextureLayer("Empty");
     registry.emplace<RuntimeVoxelTextureLayerComponent>(empty, VoxelTextureLayers{
-            .front = 0, .back = 0,
-            .left = 0, .right = 0,
-            .top = 0, .bottom = 0,
+            .front = empty_layer, .back = empty_layer,
+            .left = empty_layer, .right = empty_layer,
+            .top = empty_layer, .bottom = empty_layer,
     });
     auto dirt_layer = texture_manager.GetVoxelTextureLayer("Dirt");
     registry.emplace<RuntimeVoxelTextureLayerComponent>(dirt, VoxelTextureLayers{
@@ -72,9 +112,10 @@ void Game::Init()
             .left = dirt_layer, .right = dirt_layer,
             .top = dirt_layer, .bottom = dirt_layer,
     });
+    auto grass_side_layer = texture_manager.GetVoxelTextureLayer("Grass.Side");
     registry.emplace<RuntimeVoxelTextureLayerComponent>(grass, VoxelTextureLayers{
-            .front = dirt_layer, .back = dirt_layer,
-            .left = dirt_layer, .right = dirt_layer,
+            .front = grass_side_layer, .back = grass_side_layer,
+            .left = grass_side_layer, .right = grass_side_layer,
             .top = texture_manager.GetVoxelTextureLayer("Grass.Top"),
             .bottom = dirt_layer,
     });
@@ -120,6 +161,7 @@ void Game::FixedTick(double fixedDeltaTime)
 
 void Game::Tick(double deltaTime)
 {
+    lua_system(registry);
     VoxelEntityGenerator generator;
     ChunkInitSystem::Tick(chunk_entity_map, generator, registry);
     ChunkMeshInitSystem::Tick(registry, chunk_entity_map);
@@ -228,7 +270,8 @@ void Game::RenderUI()
     static int e = static_cast<int>(CoreEntity::Block_Dirt);
     for (auto voxel_prototype_entity : voxel_prototypes) {
         const auto &voxel_data = registry.get<VoxelDataComponent>(voxel_prototype_entity);
-        auto [uv_min, uv_max] = texture_manager.GetUV(voxel_data.name);
+        const auto &texture_layer = registry.get<RuntimeVoxelTextureLayerComponent>(voxel_prototype_entity);
+        auto [uv_min, uv_max] = texture_manager.GetUV(texture_layer.layers.front);
         ImGui::Image((void *) (intptr_t) texture_manager.texture,
                      ImVec2(texture_manager.unit_width, texture_manager.unit_height), ImVec2(uv_min.x, uv_min.y),
                      ImVec2(uv_max.x, uv_max.y));

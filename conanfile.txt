@@ -5,6 +5,7 @@ imgui/1.78
 entt/3.5.2
 enet/1.3.16
 catch2/2.13.1
+sol2/3.2.1
 
 [generators]
 cmake

@@ -100,11 +100,14 @@ public:
     int unit_width;
     int unit_height;
     inline float GetUnitUV() const { return 1.0f/static_cast<float>(GetTextureNum()); }
-    inline std::tuple<glm::vec2, glm::vec2> GetUV(const std::string &name)
+    inline std::tuple<glm::vec2, glm::vec2> GetUV(tex_t layer)
     {
-        auto layer = GetVoxelTextureLayer(name);
         auto min_v = layer*GetUnitUV();
         return std::make_tuple(glm::vec2(0, min_v), glm::vec2(1, min_v+GetUnitUV()));
+    }
+    inline std::tuple<glm::vec2, glm::vec2> GetUV(const std::string &name)
+    {
+        return GetUV(GetVoxelTextureLayer(name));
     }
 
 protected:
