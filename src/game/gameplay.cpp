@@ -74,12 +74,14 @@ void Game::Init()
     auto dirt = registry.create(CoreEntity::Block_Dirt);
     auto grass = registry.create(CoreEntity::Block_Grass);
     auto stone = registry.create(CoreEntity::Block_Stone);
+    auto tree = registry.create(CoreEntity::Block_Tree);
 
     voxel_prototypes.emplace_back(_debug_border);
     voxel_prototypes.emplace_back(empty);
     voxel_prototypes.emplace_back(dirt);
     voxel_prototypes.emplace_back(grass);
     voxel_prototypes.emplace_back(stone);
+    voxel_prototypes.emplace_back(tree);
 
     named_entities[NamedEntities::Block_Empty] = empty;
     named_entities[NamedEntities::Block_Dirt] = dirt;
@@ -92,6 +94,7 @@ void Game::Init()
     registry.emplace<VoxelDataComponent>(dirt, "Dirt", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
     registry.emplace<VoxelDataComponent>(grass, "Grass", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
     registry.emplace<VoxelDataComponent>(stone, "Stone", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
+    registry.emplace<VoxelDataComponent>(tree, "Tree", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
 
     // Convert config to runtime
     auto _debug_border_layer = texture_manager.GetVoxelTextureLayer("_DEBUG_BORDER");
@@ -124,6 +127,13 @@ void Game::Init()
             .front = stone_layer, .back = stone_layer,
             .left = stone_layer, .right = stone_layer,
             .top = stone_layer, .bottom = stone_layer,
+    });
+    auto log_top_layer = texture_manager.GetVoxelTextureLayer("Log.Top");
+    auto log_side_layer = texture_manager.GetVoxelTextureLayer("Log.Side");
+    registry.emplace<RuntimeVoxelTextureLayerComponent>(tree, VoxelTextureLayers{
+            .front = log_side_layer, .back = log_side_layer,
+            .left = log_side_layer, .right = log_side_layer,
+            .top = log_top_layer, .bottom = log_top_layer,
     });
 
     // generate terrain

@@ -49,6 +49,7 @@ struct CoreEntity
     static constexpr entt::entity Block_Dirt = static_cast<const entt::entity>(Block_Start + 2);
     static constexpr entt::entity Block_Grass = static_cast<const entt::entity>(Block_Start + 3);
     static constexpr entt::entity Block_Stone = static_cast<const entt::entity>(Block_Start + 4);
+    static constexpr entt::entity Block_Tree = static_cast<const entt::entity>(Block_Start + 5);
     // ...
 };
 
