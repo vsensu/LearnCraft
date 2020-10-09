@@ -21,6 +21,7 @@
 void Game::Init()
 {
     // load textures
+    texture_manager.RegisterTexture("_DEBUG_BORDER", "Textures/debug_border.jpg");
     texture_manager.RegisterTexture("Empty", "Textures/dirt.jpg");
     texture_manager.RegisterTexture("Dirt", "Textures/dirt.jpg");
     texture_manager.RegisterTexture("Grass.Top", "Textures/grass.jpg");
@@ -29,6 +30,7 @@ void Game::Init()
     ChunkRenderSystem::init(texture);
 
     // create core entities
+    auto _debug_border = registry.create(CoreEntity::Debug_Border);
     auto empty = registry.create(CoreEntity::Block_Empty);
     auto dirt = registry.create(CoreEntity::Block_Dirt);
     auto grass = registry.create(CoreEntity::Block_Grass);
@@ -40,12 +42,19 @@ void Game::Init()
     named_entities[NamedEntities::Block_Stone] = stone;
 
     // set voxel traits
+    registry.emplace<VoxelDataComponent>(_debug_border, "_DEBUG_BORDER", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
     registry.emplace<VoxelDataComponent>(empty, "Empty", static_cast<voxel_traits_t>(VoxelTrait::Empty));
     registry.emplace<VoxelDataComponent>(dirt, "Dirt", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
     registry.emplace<VoxelDataComponent>(grass, "Grass", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
     registry.emplace<VoxelDataComponent>(stone, "Stone", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
 
     // Convert config to runtime
+    auto _debug_border_layer = texture_manager.GetVoxelTextureLayer("_DEBUG_BORDER");
+    registry.emplace<RuntimeVoxelTextureLayerComponent>(_debug_border, VoxelTextureLayers{
+            .front = _debug_border_layer, .back = _debug_border_layer,
+            .left = _debug_border_layer, .right = _debug_border_layer,
+            .top = _debug_border_layer, .bottom = _debug_border_layer,
+    });
     registry.emplace<RuntimeVoxelTextureLayerComponent>(empty, VoxelTextureLayers{
             .front = 0, .back = 0,
             .left = 0, .right = 0,
@@ -185,7 +194,7 @@ void Game::RenderScene(Camera &camera)
     }
 
 //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    ChunkRenderSystem::Tick(camera, registry, 80.f);
+    ChunkRenderSystem::Tick(camera, registry, 80.f, texture_manager.GetTextureNum());
 
 //    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     DrawDebug::SetProjView(camera.Perspective(800.f/600) * camera.View());

@@ -86,6 +86,8 @@ public:
         return texture;
     }
 
+    inline auto GetTextureNum() const { return textures.size(); }
+
 protected:
     std::vector<std::string> textures;
     std::unordered_map<std::string, tex_t> name_tex_map_;

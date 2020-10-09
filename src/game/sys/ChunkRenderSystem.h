@@ -127,14 +127,15 @@ struct ChunkRenderSystem
         texture = tex;
     }
 
-    static void Tick(Camera &camera, entt::registry &registry, float sightRange)
+    static void Tick(Camera &camera, entt::registry &registry, float sightRange, float texturesNum)
     {
         shader->Use();
         glBindTexture(GL_TEXTURE_2D, texture);
 
         shader->LoadUniform("projView", camera.Perspective(800.f/600) * camera.View());
         shader->LoadUniform("model", glm::mat4(1.f));
-        shader->LoadUniform("texUnit", 0.25f);
+        assert(texturesNum > 0);
+        shader->LoadUniform("texUnit", 1.0f / static_cast<float>(texturesNum));
 
         const ViewFrustum& frustum = camera.GetFrustum();
         vertex_draw_count = 0;

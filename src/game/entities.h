@@ -42,6 +42,7 @@
 
 struct CoreEntity
 {
+    static constexpr entt::entity Debug_Border = static_cast<const entt::entity>(0);
     // Use entity_id not voxel_t
     static constexpr int Block_Start = 0;
     static constexpr entt::entity Block_Empty = static_cast<const entt::entity>(Block_Start + 1);

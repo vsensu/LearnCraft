@@ -26,10 +26,15 @@ struct VoxelEntityGenerator
                 {
                     entt::entity voxel;
                     int global_height = chunkPosition.y + y;
+
                     if (global_height > horizontal)
                     {
                         voxel = CoreEntity::Block_Empty;
 //                        voxel = named_entities[NamedEntities::Block_Empty];
+                    }
+                    else if(WorldUtils::IsBorder(VoxelIndex {x,y,z}))
+                    {
+                        voxel = CoreEntity::Debug_Border;
                     }
                     else if (global_height == horizontal)
                     {
