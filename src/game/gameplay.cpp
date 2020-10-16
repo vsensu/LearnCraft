@@ -17,30 +17,9 @@
 #include "entities.h"
 #include "Terrain.h"
 #include "DrawDebug.h"
+#include "ExportToLua.h"
 
 #include <sol/sol.hpp>
-
-struct LuaComp
-{
-    LuaComp(std::string value) { this->field_name = value; }
-
-    std::string field_name;
-};
-
-void lua_system(entt::registry &registry)
-{
-    auto view = registry.view<LuaComp>();
-    for(auto entity: view)
-    {
-        auto luacomp = view.get(entity);
-        std::cout << luacomp.field_name << "\n";
-    }
-}
-
-void add_lua_comp(entt::registry &registry, entt::entity entity, std::string value)
-{
-    registry.emplace<LuaComp>(entity, value);
-}
 
 void Game::Init()
 {
@@ -49,6 +28,7 @@ void Game::Init()
 
     sol::usertype<TextureManager> texture_manager_type = lua.new_usertype<TextureManager>("TextureManager");
     texture_manager_type["RegisterTexture"] = &TextureManager::RegisterTexture;
+    texture_manager_type["GetVoxelTextureLayer"] = &TextureManager::GetVoxelTextureLayer;
 
     sol::usertype<entt::registry> registry_type = lua.new_usertype<entt::registry>("Registry");
     entt::entity (entt::registry::*create_entity)() = &entt::registry::create;
@@ -56,17 +36,18 @@ void Game::Init()
     registry_type["create"] = create_entity;
     registry_type["create_with_hint"] = create_entity_hint;
 
-    sol::usertype<LuaComp> luacomp_type = lua.new_usertype<LuaComp>("LuaComp", sol::constructors<LuaComp(std::string)>());
-    luacomp_type["field_name"] = &LuaComp::field_name;
-
     lua["texture_manager"] = &texture_manager;
     lua["registry"] = &registry;
-    lua["add_lua_comp"] = add_lua_comp;
+
+    lua["EmplaceVoxelDataComponent"] = &ExportToLua::EmplaceVoxelDataComponent;
+    lua["AddVoxelPrototype"] = &ExportToLua::AddVoxelPrototype;
+    lua["CreateTexture"] = &ExportToLua::CreateTexture;
+    lua["CustomBlockStart"] = CoreEntity::Block_Custom;
+    lua["Trait_Opaque"] = VoxelTrait::Opaque;
+    lua["voxel_prototypes"] = &voxel_prototypes;
+    lua["EmplaceRuntimeVoxelTextureLayerComponent"] = &ExportToLua::EmplaceRuntimeVoxelTextureLayerComponent;
 
     lua.script_file("init.lua");
-
-    GLuint texture = texture_manager.CreateTexture();
-    ChunkRenderSystem::init(texture);
 
     // create core entities
     auto _debug_border = registry.create(CoreEntity::Debug_Border);
@@ -171,7 +152,6 @@ void Game::FixedTick(double fixedDeltaTime)
 
 void Game::Tick(double deltaTime)
 {
-    lua_system(registry);
     VoxelEntityGenerator generator;
     ChunkInitSystem::Tick(chunk_entity_map, generator, registry);
     ChunkMeshInitSystem::Tick(registry, chunk_entity_map);

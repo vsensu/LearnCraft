@@ -51,6 +51,8 @@ struct CoreEntity
     static constexpr entt::entity Block_Stone = static_cast<const entt::entity>(Block_Start + 4);
     static constexpr entt::entity Block_Tree = static_cast<const entt::entity>(Block_Start + 5);
     // ...
+
+    static constexpr entt::entity Block_Custom = static_cast<const entt::entity>(1024);
 };
 
 struct NamedEntities
