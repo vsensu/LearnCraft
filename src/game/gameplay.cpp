@@ -5,6 +5,9 @@
 #include "gameplay.h"
 
 #include <unordered_set>
+#include <fstream>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #include <game/sys/ChunkRenderSystem.h>
 #include <game/comp/VoxelDataComponent.h>
@@ -20,6 +23,35 @@
 #include "ExportToLua.h"
 
 #include <sol/sol.hpp>
+
+bool demo_exists(const fs::path& p, fs::file_status s = fs::file_status{})
+{
+    return fs::status_known(s) ? fs::exists(s) : fs::exists(p);
+}
+
+std::vector<std::string> GetFirstLayerDirs(const std::string &root, bool absolute)
+{
+    std::vector<std::string> dirs;
+    for(auto& p: fs::directory_iterator(root))
+    {
+        if(fs::is_directory(p.path()))
+        {
+            dirs.emplace_back(absolute ? fs::absolute(p.path()).generic_string() : p.path().generic_string());
+//            auto mod_init_path = p.path() / "mod.lua";
+//            if(demo_exists(mod_init_path))
+//            {
+//                mods.emplace_back(mod_init_path.generic_string());
+//                std::cout << "find mod " << mod_init_path.generic_string() << "\n";
+//            }
+        }
+    }
+    return dirs;
+}
+
+bool PathExists(const std::string &path)
+{
+    return demo_exists(path);
+}
 
 void Game::Init()
 {
@@ -40,82 +72,21 @@ void Game::Init()
     lua["registry"] = &registry;
 
     lua["EmplaceVoxelDataComponent"] = &ExportToLua::EmplaceVoxelDataComponent;
-    lua["AddVoxelPrototype"] = &ExportToLua::AddVoxelPrototype;
-    lua["CreateTexture"] = &ExportToLua::CreateTexture;
-    lua["CustomBlockStart"] = CoreEntity::Block_Custom;
-    lua["Trait_Opaque"] = VoxelTrait::Opaque;
-    lua["voxel_prototypes"] = &voxel_prototypes;
     lua["EmplaceRuntimeVoxelTextureLayerComponent"] = &ExportToLua::EmplaceRuntimeVoxelTextureLayerComponent;
 
+    lua["AddVoxelPrototype"] = &ExportToLua::AddVoxelPrototype;
+    lua["CreateTexture"] = &ExportToLua::CreateTexture;
+    lua["voxel_prototypes"] = &voxel_prototypes;
+
+    lua["CustomBlockStart"] = CoreEntity::Block_Custom;
+
+    lua["Trait_Empty"] = VoxelTrait::Empty;
+    lua["Trait_Opaque"] = VoxelTrait::Opaque;
+
+    lua["GetFirstLayerDirs"] = &GetFirstLayerDirs;
+    lua["PathExists"] = &PathExists;
+
     lua.script_file("init.lua");
-
-    // create core entities
-    auto _debug_border = registry.create(CoreEntity::Debug_Border);
-    auto empty = registry.create(CoreEntity::Block_Empty);
-    auto dirt = registry.create(CoreEntity::Block_Dirt);
-    auto grass = registry.create(CoreEntity::Block_Grass);
-    auto stone = registry.create(CoreEntity::Block_Stone);
-    auto tree = registry.create(CoreEntity::Block_Tree);
-
-    voxel_prototypes.emplace_back(_debug_border);
-    voxel_prototypes.emplace_back(empty);
-    voxel_prototypes.emplace_back(dirt);
-    voxel_prototypes.emplace_back(grass);
-    voxel_prototypes.emplace_back(stone);
-    voxel_prototypes.emplace_back(tree);
-
-    named_entities[NamedEntities::Block_Empty] = empty;
-    named_entities[NamedEntities::Block_Dirt] = dirt;
-    named_entities[NamedEntities::Block_Grass] = grass;
-    named_entities[NamedEntities::Block_Stone] = stone;
-
-    // set voxel traits
-    registry.emplace<VoxelDataComponent>(_debug_border, "_DEBUG_BORDER", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
-    registry.emplace<VoxelDataComponent>(empty, "Empty", static_cast<voxel_traits_t>(VoxelTrait::Empty));
-    registry.emplace<VoxelDataComponent>(dirt, "Dirt", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
-    registry.emplace<VoxelDataComponent>(grass, "Grass", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
-    registry.emplace<VoxelDataComponent>(stone, "Stone", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
-    registry.emplace<VoxelDataComponent>(tree, "Tree", static_cast<voxel_traits_t>(VoxelTrait::Opaque));
-
-    // Convert config to runtime
-    auto _debug_border_layer = texture_manager.GetVoxelTextureLayer("_DEBUG_BORDER");
-    registry.emplace<RuntimeVoxelTextureLayerComponent>(_debug_border, VoxelTextureLayers{
-            .front = _debug_border_layer, .back = _debug_border_layer,
-            .left = _debug_border_layer, .right = _debug_border_layer,
-            .top = _debug_border_layer, .bottom = _debug_border_layer,
-    });
-    auto empty_layer = texture_manager.GetVoxelTextureLayer("Empty");
-    registry.emplace<RuntimeVoxelTextureLayerComponent>(empty, VoxelTextureLayers{
-            .front = empty_layer, .back = empty_layer,
-            .left = empty_layer, .right = empty_layer,
-            .top = empty_layer, .bottom = empty_layer,
-    });
-    auto dirt_layer = texture_manager.GetVoxelTextureLayer("Dirt");
-    registry.emplace<RuntimeVoxelTextureLayerComponent>(dirt, VoxelTextureLayers{
-            .front = dirt_layer, .back = dirt_layer,
-            .left = dirt_layer, .right = dirt_layer,
-            .top = dirt_layer, .bottom = dirt_layer,
-    });
-    auto grass_side_layer = texture_manager.GetVoxelTextureLayer("Grass.Side");
-    registry.emplace<RuntimeVoxelTextureLayerComponent>(grass, VoxelTextureLayers{
-            .front = grass_side_layer, .back = grass_side_layer,
-            .left = grass_side_layer, .right = grass_side_layer,
-            .top = texture_manager.GetVoxelTextureLayer("Grass.Top"),
-            .bottom = dirt_layer,
-    });
-    auto stone_layer = texture_manager.GetVoxelTextureLayer("Stone");
-    registry.emplace<RuntimeVoxelTextureLayerComponent>(stone, VoxelTextureLayers{
-            .front = stone_layer, .back = stone_layer,
-            .left = stone_layer, .right = stone_layer,
-            .top = stone_layer, .bottom = stone_layer,
-    });
-    auto log_top_layer = texture_manager.GetVoxelTextureLayer("Log.Top");
-    auto log_side_layer = texture_manager.GetVoxelTextureLayer("Log.Side");
-    registry.emplace<RuntimeVoxelTextureLayerComponent>(tree, VoxelTextureLayers{
-            .front = log_side_layer, .back = log_side_layer,
-            .left = log_side_layer, .right = log_side_layer,
-            .top = log_top_layer, .bottom = log_top_layer,
-    });
 
     // generate terrain
     NoiseTool::GenerateHeightCache(-50, -50, 50, 50);

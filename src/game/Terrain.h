@@ -38,14 +38,14 @@ struct VoxelEntityGenerator
                     }
                     else if (global_height == horizontal)
                     {
-                        if(rand() % 10 == 0)
-                        {
-                            voxel = CoreEntity::Block_Tree;
-                        }
-                        else
-                        {
+//                        if(rand() % 10 == 0)
+//                        {
+//                            voxel = CoreEntity::Block_Tree;
+//                        }
+//                        else
+//                        {
                             voxel = CoreEntity::Block_Grass;
-                        }
+//                        }
                     }
                     else if (global_height >= dirt_base)
                     {
