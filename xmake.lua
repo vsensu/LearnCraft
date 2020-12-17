@@ -22,3 +22,17 @@ target("LearnCraft")
         -- glfw3.lib need
         add_links("user32", "gdi32", "shell32")
     end
+    after_build(function (target)
+        -- copy lua
+        os.cp("scripts/api.lua", path.join(target:targetdir(), "api.lua"))
+        os.cp("scripts/init.lua", path.join(target:targetdir(), "init.lua"))
+        os.cp("scripts/mods.lua", path.join(target:targetdir(), "mods.lua"))
+
+        -- copy core mods
+        os.tryrm(path.join(target:targetdir(), "game/"))
+        os.cp("game/", path.join(target:targetdir(), "game"))
+
+        -- copy textures
+        os.tryrm(path.join(target:targetdir(), "Textures/"))
+        os.cp("res/textures/", path.join(target:targetdir(), "Textures"))
+    end)
