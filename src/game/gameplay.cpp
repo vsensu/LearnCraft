@@ -32,19 +32,23 @@ bool demo_exists(const fs::path& p, fs::file_status s = fs::file_status{})
 std::vector<std::string> GetFirstLayerDirs(const std::string &root, bool absolute)
 {
     std::vector<std::string> dirs;
-    for(auto& p: fs::directory_iterator(root))
+    if (demo_exists(root))
     {
-        if(fs::is_directory(p.path()))
+        for (auto &p : fs::directory_iterator(root))
         {
-            dirs.emplace_back(absolute ? fs::absolute(p.path()).generic_string() : p.path().generic_string());
-//            auto mod_init_path = p.path() / "mod.lua";
-//            if(demo_exists(mod_init_path))
-//            {
-//                mods.emplace_back(mod_init_path.generic_string());
-//                std::cout << "find mod " << mod_init_path.generic_string() << "\n";
-//            }
+            if (fs::is_directory(p.path()))
+            {
+                dirs.emplace_back(absolute ? fs::absolute(p.path()).generic_string() : p.path().generic_string());
+                //            auto mod_init_path = p.path() / "mod.lua";
+                //            if(demo_exists(mod_init_path))
+                //            {
+                //                mods.emplace_back(mod_init_path.generic_string());
+                //                std::cout << "find mod " << mod_init_path.generic_string() << "\n";
+                //            }
+            }
         }
     }
+
     return dirs;
 }
 
