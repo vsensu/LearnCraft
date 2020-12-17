@@ -1,36 +1,18 @@
-# Build
+## Platform
+xmake f -p [windows|linux|macosx|android|iphoneos ..] -a [x86|arm64 ..] -m [debug|release]
+> eg. xmake f -p windows -a x64 -m debug
 
-## Prerequisites
-Python  CMake
+## Build
+xmake
 
-## Step 1: Install Conan
-pip install conan
+## vscode compile_commands.json
+xmake project -k compile_commands
+C/C++: Edit Configurations (JSON) 
 
-## Step 2: Install Dependencies
-git clone https://github.com/vsensu/LearnCraft.git
-
-$ cd LearnCraft
-
-$ mkdir build && cd build
-
-$ conan install ..
-
-## Step 3: Build
-(win)
-
-$ cmake .. -G "Visual Studio 16"
-
-$ cmake --build . --config Release
-
-(linux, mac)
-
-$ cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
-
-$ cmake --build .
-
-...
-
-## Step 4: Run
-$ ./bin/LearnCraft
+"configurations": [
+    {
+      "compileCommands": "${workspaceFolder}/.vscode/compile_commands.json"
+    }
+  ],
 
 Enjoy!

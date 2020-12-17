@@ -25,7 +25,7 @@ public:
 	}
 
     static ChunkIndex
-    WorldUtils::GetChunkIndexViaLocation(const Position &pos)
+    GetChunkIndexViaLocation(const Position &pos)
     {
         int index_x = static_cast<int>(std::floor(pos.x / WorldConfig::kChunkSizeX));
         int index_y = static_cast<int>(std::floor(pos.y / WorldConfig::kChunkSizeY));
@@ -40,7 +40,7 @@ public:
 	static Position
 	VoxelIndexToGlobalLocation(const VoxelIndex &voxelIndex);
     static std::tuple<ChunkIndex, VoxelIndex>
-    WorldUtils::GlobalLocationToVoxel(const VoxelPosition &pos);
+    GlobalLocationToVoxel(const VoxelPosition &pos);
 
 	static inline Position ChunkIndexToPosition(const ChunkIndex &chunkIndex)
 	{
