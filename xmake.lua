@@ -30,7 +30,7 @@ target("LearnCraft")
 
         -- copy core mods
         os.tryrm(path.join(target:targetdir(), "game/"))
-        os.cp("game/", path.join(target:targetdir(), "game"))
+        os.cp("scripts/game/", path.join(target:targetdir(), "game"))
 
         -- copy textures
         os.tryrm(path.join(target:targetdir(), "Textures/"))
