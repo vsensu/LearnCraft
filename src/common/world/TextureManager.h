@@ -5,7 +5,9 @@
 #ifndef LEARNCRAFT_TEXTUREMANAGER_H
 #define LEARNCRAFT_TEXTUREMANAGER_H
 
+#include <vector>
 #include <string>
+#include <unordered_map>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb_image/stb_image.h>
